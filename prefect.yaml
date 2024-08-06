@@ -22,7 +22,7 @@ deployments:
     version: null
     tags: ["TEST"]
     description: null
-    entrypoint: workflows/crdcdh/dbgap_validation.py:get_secret_from_aws
+    entrypoint: workflow/crdcdh/dbgap_validation.py:get_secret_from_aws
     schedule: null
 
     # flow-specific parameters
