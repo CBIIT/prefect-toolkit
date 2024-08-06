@@ -75,7 +75,8 @@ def metadata_validation_str(
         i for i in db_participant_list if i not in dbgap_participant_dict.keys()
     ]
     if len(p_in_db_not_in_dbGaP) > 0:
-        error_message = f"Error: Found participants in DB but not in dbGaP.\n{"\n".join(p_in_db_not_in_dbGaP)}\n\n"
+        p_in_db_not_in_dbGaP_str = "\n".join(p_in_db_not_in_dbGaP)
+        error_message = f"Error: Found participants in DB but not in dbGaP.\n{p_in_db_not_in_dbGaP_str}\n\n"
         summary_str +=  error_message
     else:
         # participants in DB are all found in dbGaP
@@ -85,7 +86,8 @@ def metadata_validation_str(
     p_in_db_in_dbGaP = [i for i in db_participant_list if i in dbgap_participant_dict.keys()]
     p_consent_zero = [i for i in p_in_db_in_dbGaP if dbgap_participant_dict[i] == 0]
     if len(p_consent_zero) > 0:
-        error_message = f"ERROR: Found participants in DB with consent code of 0 in dbGaP.\n{"\n".join(p_consent_zero)}\n\n"
+        p_consent_zero_str = "\n".join(p_consent_zero)
+        error_message = f"ERROR: Found participants in DB with consent code of 0 in dbGaP.\n{p_consent_zero_str}\n\n"
         summary_str +=  error_message
     else:
         # participants in DB and dbGaP, and no consent code 0 is found
@@ -98,7 +100,8 @@ def metadata_validation_str(
     # make sure these participants are not consent 0
     p_in_dbGaP_not_in_db = [i for i in p_in_dbGaP_not_in_db if dbgap_participant_dict[i] != 0]
     if len(p_in_dbGaP_not_in_db) > 0:
-        warn_message = f"WARNING: Found participants in dbGaP (consent non-0) but in DB.\n{"\n".join(p_in_dbGaP_not_in_db)}\n\n"
+        p_in_dbGaP_not_in_db_str = "\n".join(p_in_dbGaP_not_in_db)
+        warn_message = f"WARNING: Found participants in dbGaP (consent non-0) but in DB.\n{p_in_dbGaP_not_in_db_str}\n\n"
         summary_str += warn_message
     else:
         # all participants in dbGaP found in DB
