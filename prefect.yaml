@@ -30,11 +30,12 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.projects.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/prefect-toolkit.git
           branch: CRDCDH-1415-dbgap_validation
-      - prefect.projects.steps.pip_install_requirements:
+          include_submodules: True
+      - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
