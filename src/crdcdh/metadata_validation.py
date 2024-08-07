@@ -1,4 +1,5 @@
 from pymongo import MongoClient, errors
+from typing import Union
 from src.commons.constants import DATARECORD_COLLECTION, SUBMISSION_COLLECTION
 
 
@@ -55,7 +56,7 @@ class DataHubMongoDB:
             version = study_version_str.split(".")[1][1:]
             return version
 
-    def get_dbgap_id(self, submission_id: str) -> str | None:
+    def get_dbgap_id(self, submission_id: str) -> Union[str, None]:
         """Returns dbGaP accession id in the submissions collection of a submission.
         Practically, it should only return one record. However, multiple dbGaP
         ids might be found associated with one submissionID in dataRecords due to testing sets
@@ -93,7 +94,7 @@ class DataHubMongoDB:
             )
             return None
 
-    def get_study_version(self, submission_id: str) -> str | None:
+    def get_study_version(self, submission_id: str) -> Union[str, None]:
         """Returns study version of a submission
 
         Args:
@@ -127,7 +128,7 @@ class DataHubMongoDB:
             )
             return None
 
-    def get_study_participants(self, submission_id: str) -> list[str] | None:
+    def get_study_participants(self, submission_id: str) -> Union[list[str], None]:
         """Returns a list of participant ids of a submission
 
         Args:
@@ -157,7 +158,7 @@ class DataHubMongoDB:
             )
             return None
 
-    def get_study_samples(self, submission_id: str) -> dict | None:
+    def get_study_samples(self, submission_id: str) -> Union[dict, None]:
         """Returns a list of sample ids of a submission
 
         Args:
