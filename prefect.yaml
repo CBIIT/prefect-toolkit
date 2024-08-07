@@ -14,7 +14,7 @@ push: null
 
 # pull section allows you to provide instructions for cloning this project in remote locations
 
-pull: 
+pull:
   - prefect.deployments.steps.git_clone:
       id: clone-step
       repository: https://github.com/CBIIT/prefect-toolkit.git
@@ -36,6 +36,8 @@ deployments:
 
     # flow-specific parameters
     parameters:
+
+    pull:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/prefect-toolkit.git
@@ -51,4 +53,3 @@ deployments:
       name: crdc-dh-dev-validation-ecs
       work_queue_name: null
       job_variables: {}
-
