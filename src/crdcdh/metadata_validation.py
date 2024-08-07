@@ -1,6 +1,19 @@
 from pymongo import MongoClient, errors
 from typing import Union
 from src.commons.constants import DATARECORD_COLLECTION, SUBMISSION_COLLECTION
+from src.commons.constants import CrdcDHMongoDB
+from src.commons.utils import get_secret
+
+
+def mongodb_connection_str() -> str:
+    secret_name =  CrdcDHMongoDB.secret_name
+    secret_value_dict =  get_secret(secret_name=secret_name)
+    db_user = secret_value_dict["mongo_db_user"]
+    db_password = secret_value_dict["mongo_db_password"]
+    db_host = secret_value_dict["mongo_db_host"]
+    db_port = secret_value_dict["mongo_db_port"]
+    connection_str = f"mongodb://{db_user}:{db_password}@{db_host.split(".")[0]}:{db_port}/?authMechanism=DEFAULT&authSource=admin"
+    return connection_str
 
 
 class DataHubMongoDB:
