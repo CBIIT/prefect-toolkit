@@ -222,6 +222,9 @@ def validation_against_dbgap(
 
 @flow(name="get secret", log_prints=True)
 def get_secret_from_aws(secret_name: str) -> None:
+    mydf = pd.DataFrame(columns=["col1", "col2"])
+    mydf["col1"] = [1,2,3]
+    print(mydf)
     secret = get_secret(secret_name=secret_name)
     print(secret)
     return None

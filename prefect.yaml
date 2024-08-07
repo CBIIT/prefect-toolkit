@@ -14,7 +14,16 @@ push: null
 
 # pull section allows you to provide instructions for cloning this project in remote locations
 
-pull: null
+pull: 
+  - prefect.deployments.steps.git_clone:
+      id: clone-step
+      repository: https://github.com/CBIIT/prefect-toolkit.git
+      branch: CRDCDH-1415-dbgap_validation
+      include_submodules: True
+  - prefect.deployments.steps.pip_install_requirements:
+      requirements_file: requirements.txt
+      directory: "{{ clone-step.directory }}"
+      stream_output: False
 
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
@@ -27,9 +36,6 @@ deployments:
 
     # flow-specific parameters
     parameters:
-
-    # pull action to overwrite from file pull action
-    pull:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/prefect-toolkit.git
