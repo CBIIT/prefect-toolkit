@@ -179,12 +179,12 @@ def metadata_validation_str(
     flow_run_name=f"datahub-metadata-validation-{get_time()}",
 )
 def validation_against_dbgap(
-    db_name: str, connectionstr: str, submission_id: str
+    submission_id: str
 ) -> None:
     logger = get_run_logger()
 
     # create a datahub mongodb
-    db_object = DataHubMongoDB(connectionStr=connectionstr, db_name=db_name)
+    db_object = DataHubMongoDB()
 
     # get DB participant
     submission_participants = db_object.get_study_participants(
@@ -203,11 +203,22 @@ def validation_against_dbgap(
     study_version = db_object.get_study_version(submission_id=submission_id)
     logger.info(f"Submission {submission_id} dbGaP accession: {study_accession}")
     logger.info(f"Submission {submission_id} dbGaP version: {study_version}")
+    if study_version == None:
+        study_version = "0"
+    else:
+        pass
     # get dbgap participants
     sstrhaul = SstrHaul(phs_accession=study_accession, version_str=study_version)
     study_particpant_dict = sstrhaul.get_study_participants()
     study_sample_dict = sstrhaul.get_study_samples()
+    logger.info(
+        f"Participants found for study {study_accession} in dbGaP: {len(study_particpant_dict.keys())}"
+    )
+    logger.info(
+        f"Samples found for study {study_accession} in dbGaP: {len(study_sample_dict.keys())}"
+    )
 
+    """
     # validation
     validation_str =  metadata_validation_str(db_participant_list=submission_participants, 
                                               db_sample_dict=submission_samples, 
@@ -219,15 +230,17 @@ def validation_against_dbgap(
                         participant_count=len(submission_participants), 
                         sample_count=len(submission_samples.keys()), 
                         validationstr=validation_str)
+    """
+    
 
 @flow(name="dbgap validation", log_prints=True)
 def dbgap_validation_test() -> None:
 
     dh_mongo = DataHubMongoDB()
     
-    connection_str = dh_mongo._mongo_connection_str()
+    #connection_str = dh_mongo._mongo_connection_str()
 
-    db_name = dh_mongo._mongo_db_name()
+    #db_name = dh_mongo._mongo_db_name()
 
     dbgap_id = dh_mongo.get_dbgap_id(
         submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"

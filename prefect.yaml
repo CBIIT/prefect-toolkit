@@ -31,7 +31,7 @@ deployments:
     version: null
     tags: ["TEST"]
     description: null
-    entrypoint: workflow/crdcdh/dbgap_validation.py:dbgap_validation_test
+    entrypoint: workflow/crdcdh/dbgap_validation.py:validation_against_dbgap
     schedule: null
 
     # flow-specific parameters
