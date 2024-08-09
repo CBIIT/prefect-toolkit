@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 @dataclass
-class CrdcDHMongoDB:
+class CrdcDHMongoSecrets:
     """A class stores constants related to MongoDB of CRDCDH
     """
     secret_name = "bento/crdc-hub/dev2"

@@ -1,34 +1,48 @@
 from pymongo import MongoClient, errors
 from typing import Union
-from src.commons.constants import DATARECORD_COLLECTION, SUBMISSION_COLLECTION
-from src.commons.constants import CrdcDHMongoDB
+from src.commons.constants import CrdcDHMongoSecrets
 from src.commons.utils import get_secret
 
 
-def mongodb_connection_str() -> str:
-    secret_name =  CrdcDHMongoDB.secret_name
-    secret_value_dict =  get_secret(secret_name=secret_name)
-    db_user = secret_value_dict["mongo_db_user"]
-    db_password = secret_value_dict["mongo_db_password"]
-    db_host = secret_value_dict["mongo_db_host"]
-    db_port = secret_value_dict["mongo_db_port"]
-    connection_str = f"mongodb://{db_user}:{db_password}@{db_host.split(".")[0]}:{db_port}/?authMechanism=DEFAULT&authSource=admin"
-    return connection_str
-
-
-class DataHubMongoDB:
+class DataHubMongoDB(CrdcDHMongoSecrets):
     """A Class interacts with DataHub MongoDB
     """    
 
-    def __init__(self, connectionStr: str, db_name: str):
+    def __init__(self):
         """Inits DataHubMongoDB
-
-        Args:
-            connectionStr (str): _description_
-            db_name (str): _description_
         """
-        self.client = MongoClient(connectionStr)
-        self.db_name = db_name
+    
+    def _mongo_connection_str(self) -> str:
+        """Returns connection str of 
+
+        Returns:
+            str: A string for mongodb connection
+        """
+        secret_name =  self.secret_name
+        secret_value_dict =  get_secret(secret_name=secret_name)
+        db_user = secret_value_dict["mongo_db_user"]
+        db_password = secret_value_dict["mongo_db_password"]
+        db_host = secret_value_dict["mongo_db_host"]
+        db_port = secret_value_dict["mongo_db_port"]
+        connection_str = f"mongodb://{db_user}:{db_password}@{db_host.split(".")[0]}:{db_port}/?authMechanism=DEFAULT&authSource=admin"
+        return connection_str
+
+    def _mongodb_client(self):
+        connectionstr = self._mongo_connection_str()
+        client =  MongoClient(connectionstr)
+        return client
+
+    def _mongo_db_name(self) -> str:
+        """Returns a mongodb database name
+
+        Returns:
+            str: db name
+        """        
+        secret_name =  self.secret_name
+        secret_value_dict =  get_secret(secret_name=secret_name)
+        db_name = secret_value_dict["database_name"]
+        return db_name
+
 
     def _find_study_version_delimiter(self, study_version_str: str) -> str:
         """Finds delimiter in the study_version str
@@ -67,7 +81,7 @@ class DataHubMongoDB:
             return str(latest_version)
         else:
             version = study_version_str.split(".")[1][1:]
-            return version
+            return version  
 
     def get_dbgap_id(self, submission_id: str) -> Union[str, None]:
         """Returns dbGaP accession id in the submissions collection of a submission.
@@ -75,27 +89,34 @@ class DataHubMongoDB:
         ids might be found associated with one submissionID in dataRecords due to testing sets
 
         Args:
-            submission_id (str): submisisonID in dataRecords collection or _id in submission
+            submission_id (str): submisisonID in datarecords collection or _id in submission
 
         Returns:
             str|None: a dbGaP accession number, e.g.,"phs000123"
         """
-        db = self.client[self.db_name]
-        submission_collection = db[DATARECORD_COLLECTION]
+        client = self._mongodb_client()
+        db_name =  self._mongo_db_name()
+        db = client[db_name]
+        submission_collection = db[self.submission_collection]
         try:
             submission_id_query = submission_collection.find(
-                {"submissionID": submission_id, "nodeType": "study"},
-                {"props.phs_accession": 1},
+                {"_id": submission_id},
+                {"dbGaPID": 1},
             )
             id_return = []
             for i in submission_id_query:
-                i_dbgap_id = i["props"]["phs_accession"]
+                i_dbgap_id = i["dbGaPID"]
                 id_return.append(i_dbgap_id)
             # return a list. We should expect only a record
             if len(id_return) > 1:
                 print(id_return)
             # only return first item
-            return id_return[0]
+            if "." in id_return[0]:
+                # in case the dbGaP id has other informtaion, such as phs000123.v2.p1
+                return id_return[0].split(".")[0]
+            else:
+                return id_return[0]
+            
         except errors.PyMongoError as pe:
             print(
                 f"Failed to find submission in submissions collection: {submission_id}\n{repr(pe)}"
@@ -116,8 +137,10 @@ class DataHubMongoDB:
         Returns:
             str|None: string version of version number
         """
-        db = self.client[self.db_name]
-        record_collection = db[DATARECORD_COLLECTION]
+        client = self._mongodb_client()
+        db_name =  self._mongo_db_name()
+        db = client[db_name]
+        record_collection = db[self.datarecord_colleciton]
         try:
 
             record_collection_query = record_collection.find(
@@ -152,8 +175,10 @@ class DataHubMongoDB:
         Returns:
             list[str]|None: A list of participant ids of a submission
         """
-        db = self.client[self.db_name]
-        record_collection = db[DATARECORD_COLLECTION]
+        client = self._mongodb_client()
+        db_name =  self._mongo_db_name()
+        db = client[db_name]
+        record_collection = db[self.datarecord_colleciton]
         try:
             query_return_list = record_collection.find({"submissionID":submission_id, "nodeType":"participant"},{"nodeID":1, "props.participant_id":1})
             # we assume this submission id is only associated with one study
@@ -182,8 +207,10 @@ class DataHubMongoDB:
         Returns:
             list[str] | None: A list of dictionary with sample id as key and parent participant id as value
         """
-        db = self.client[self.db_name]
-        record_collection = db[DATARECORD_COLLECTION]
+        client = self._mongodb_client()
+        db_name =  self._mongo_db_name()
+        db = client[db_name]
+        record_collection = db[self.datarecord_colleciton]
         try:
             query_return_list = record_collection.find({"submissionID":submission_id, "nodeType":"sample"},{"nodeID":1, "props.sample_id":1})
             # we assume this submission id is only associated with one study

@@ -1,6 +1,6 @@
 from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
-from src.commons.utils import get_time, get_secret
+from src.commons.utils import get_time
 from src.crdcdh.metadata_validation import DataHubMongoDB
 from src.commons.dbgap_sstr import SstrHaul
 from typing import TypeVar
@@ -220,11 +220,34 @@ def validation_against_dbgap(
                         sample_count=len(submission_samples.keys()), 
                         validationstr=validation_str)
 
-@flow(name="get secret", log_prints=True)
-def get_secret_from_aws(secret_name: str) -> None:
-    mydf = pd.DataFrame(columns=["col1", "col2"])
-    mydf["col1"] = [1,2,3]
-    print(mydf)
-    secret = get_secret(secret_name=secret_name)
-    print(secret)
+@flow(name="test dbgap validation", log_prints=True)
+def dbgap_validation_test() -> None:
+
+    dh_mongo = DataHubMongoDB()
+    connection_str = dh_mongo._mongo_connection_str()
+    print(connection_str)
+
+    db_name = dh_mongo._mongo_db_name()
+    print(db_name)
+
+    dbgap_id = dh_mongo.get_dbgap_id(
+        submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
+    )
+    print(dbgap_id) # should expect phs002529
+
+    version_number = dh_mongo.get_study_version(
+        submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
+    )
+    print(version_number)
+
+    study_particpants = dh_mongo.get_study_participants(
+        submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
+    )
+    print(study_particpants)
+
+    study_samples = dh_mongo.get_study_samples(
+        submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
+    )
+    print(study_samples)
+
     return None
