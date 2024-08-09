@@ -224,30 +224,32 @@ def validation_against_dbgap(
 def dbgap_validation_test() -> None:
 
     dh_mongo = DataHubMongoDB()
+    
     connection_str = dh_mongo._mongo_connection_str()
-    print(connection_str)
 
     db_name = dh_mongo._mongo_db_name()
-    print(db_name)
 
     dbgap_id = dh_mongo.get_dbgap_id(
         submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
     )
-    print(dbgap_id) # should expect phs002529
+    print(f"dbGaP accessioin for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {dbgap_id}") # should expect phs002529
 
     version_number = dh_mongo.get_study_version(
-        submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
+        submission_id="2a23e8ed-af03-4d8e-9ef7-ebd3af79611f"
     )
-    print(version_number)
+    print(f"version for submission 2a23e8ed-af03-4d8e-9ef7-ebd3af79611f: {version_number}")
 
     study_particpants = dh_mongo.get_study_participants(
         submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
     )
-    print(study_particpants)
+    print(f"study participants for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {*study_particpants,}")
 
     study_samples = dh_mongo.get_study_samples(
         submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
     )
-    print(study_samples)
+    sample_list = [key+":"+study_samples[key] for key in study_samples.keys()]
+    print(
+        f"study samples for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {*sample_list,}"
+    )
 
     return None
