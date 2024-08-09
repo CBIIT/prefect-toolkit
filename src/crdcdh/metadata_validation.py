@@ -11,7 +11,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
     def __init__(self):
         """Inits DataHubMongoDB
         """
-    
+
     def _mongo_connection_str(self) -> str:
         """Returns connection str of 
 
@@ -23,8 +23,9 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         db_user = secret_value_dict["mongo_db_user"]
         db_password = secret_value_dict["mongo_db_password"]
         db_host = secret_value_dict["mongo_db_host"]
+        db_host_firstpart = db_host.split(".")[0]
         db_port = secret_value_dict["mongo_db_port"]
-        connection_str = f"mongodb://{db_user}:{db_password}@{db_host.split(".")[0]}:{db_port}/?authMechanism=DEFAULT&authSource=admin"
+        connection_str = f"mongodb://{db_user}:{db_password}@{db_host_firstpart}:{db_port}/?authMechanism=DEFAULT&authSource=admin"
         return connection_str
 
     def _mongodb_client(self):
@@ -42,7 +43,6 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         secret_value_dict =  get_secret(secret_name=secret_name)
         db_name = secret_value_dict["database_name"]
         return db_name
-
 
     def _find_study_version_delimiter(self, study_version_str: str) -> str:
         """Finds delimiter in the study_version str
@@ -116,7 +116,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 return id_return[0].split(".")[0]
             else:
                 return id_return[0]
-            
+
         except errors.PyMongoError as pe:
             print(
                 f"Failed to find submission in submissions collection: {submission_id}\n{repr(pe)}"
