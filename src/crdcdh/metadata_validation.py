@@ -218,7 +218,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             )
             # we assume this submission id is only associated with one study
             sample_dict = dict()
-            if query_return_list.count() > 0:
+            if query_return_list.count_documents({}) > 0:
                 for item in query_return_list:
                     item_id = item["props"]["sample_id"]
                     item_parent = item["parents"][0]["parentIDValue"]
