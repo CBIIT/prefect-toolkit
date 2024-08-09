@@ -23,7 +23,8 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         db_user = secret_value_dict["mongo_db_user"]
         db_password = secret_value_dict["mongo_db_password"]
         db_host = secret_value_dict["mongo_db_host"]
-        db_host_firstpart = db_host.split(".")[0]
+        #db_host_firstpart = db_host.split(".")[0]
+        db_host_firstpart = db_host
         db_port = secret_value_dict["mongo_db_port"]
         connection_str = f"mongodb://{db_user}:{db_password}@{db_host_firstpart}:{db_port}/?authMechanism=DEFAULT&authSource=admin"
         return connection_str

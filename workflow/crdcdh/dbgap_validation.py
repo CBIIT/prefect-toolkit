@@ -223,13 +223,6 @@ def validation_against_dbgap(
 @flow(name="dbgap validation", log_prints=True)
 def dbgap_validation_test() -> None:
 
-    dh_mongo = DataHubMongoDB()
-    connection_str = dh_mongo._mongo_connection_str()
-    print(connection_str)
-
-    db_name = dh_mongo._mongo_db_name()
-    print(db_name)
-
     dbgap_id = dh_mongo.get_dbgap_id(
         submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
     )
