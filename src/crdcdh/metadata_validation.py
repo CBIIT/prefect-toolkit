@@ -212,7 +212,10 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         db = client[db_name]
         record_collection = db[self.datarecord_colleciton]
         try:
-            query_return_list = record_collection.find({"submissionID":submission_id, "nodeType":"sample"},{"nodeID":1, "props.sample_id":1})
+            query_return_list = record_collection.find(
+                {"submissionID": submission_id, "nodeType": "sample"},
+                {"nodeID": 1, "props.sample_id": 1, "parents": 1},
+            )
             # we assume this submission id is only associated with one study
             sample_dict = dict()
             if len(query_return_list) > 0:
