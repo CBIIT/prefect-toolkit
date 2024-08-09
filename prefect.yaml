@@ -27,11 +27,11 @@ pull:
 
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
-  - name: get-secrets
+  - name: dbgap_validation
     version: null
     tags: ["TEST"]
     description: null
-    entrypoint: workflow/crdcdh/dbgap_validation.py:get_secret_from_aws
+    entrypoint: workflow/crdcdh/dbgap_validation.py:dbgap_validation_test
     schedule: null
 
     # flow-specific parameters

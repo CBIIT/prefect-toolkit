@@ -220,7 +220,7 @@ def validation_against_dbgap(
                         sample_count=len(submission_samples.keys()), 
                         validationstr=validation_str)
 
-@flow(name="test dbgap validation", log_prints=True)
+@flow(name="dbgap validation", log_prints=True)
 def dbgap_validation_test() -> None:
 
     dh_mongo = DataHubMongoDB()
