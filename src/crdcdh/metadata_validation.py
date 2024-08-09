@@ -141,17 +141,21 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         db = client[db_name]
         record_collection = db[self.datarecord_colleciton]
         try:
-
             record_collection_query = record_collection.find(
                 {"submissionID": submission_id, "nodeType": "study"},
                 {"props.study_version": 1},
             )
-            # we are only looking at the first record
-            study_version_str = record_collection_query[0]["props"]["study_version"]
-            study_version = self._find_latest_version(
-                study_version_str=study_version_str
-            )
-            return study_version
+            if record_collection.count_documents({"submissionID": submission_id, "nodeType": "study"}) > 0:
+                # we are only looking at the first record
+                print(record_collection.count_documents({"submissionID": submission_id, "nodeType": "study"}))
+                study_version_str = record_collection_query[0]["props"]["study_version"]
+                study_version = self._find_latest_version(
+                    study_version_str=study_version_str
+                )
+                return study_version
+            else:
+                # no version found
+                return None
         except errors.PyMongoError as pe:
             print(
                 f"Failed to find submission study version in dataRecords collection: {submission_id}\n{repr(pe)}"
