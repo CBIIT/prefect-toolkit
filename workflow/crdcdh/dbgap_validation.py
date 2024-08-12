@@ -13,6 +13,7 @@ DataFrame = TypeVar("DataFrame")
 
 @task
 def dbgap_validation_md(
+    submission_id: str,
     study_accession: str,
     study_version: str,
     participant_count: int,
@@ -29,17 +30,21 @@ def dbgap_validation_md(
         validationstr (str): validation report str
     """
     if int(study_version) == 0:
-        study_version = "Not Found\n\tWARNING: Validation was performed using LATEST version found dbGaP API"
-    markdown_report = f"""# CRDCDH Metadata Validation Report
-## {get_time()}
+        study_version = "Not Found\n    - WARNING: Validation was performed using LATEST version found dbGaP API"
+    else:
+        pass
+    markdown_report = f"""# CRDCDH Metadata Validation Report - {get_time()}
+## Submission Information
 
-- dbGaP accession in DB: {study_accession}
+- **Submisison ID**: {submission_id}
 
-- dbGaP version in DB: {study_version}
+- **dbGaP accession in DB**: {study_accession}
 
-- Participant count in DB: {participant_count}
+- **dbGaP version in DB**: {study_version}
 
-- Sample count in DB: {sample_count}
+- **Participant count in DB**: {participant_count}
+
+- **Sample count in DB**: {sample_count}
 
 ## Validation Report
 
@@ -79,18 +84,20 @@ def metadata_validation_str(
     if len(p_in_db_not_in_dbGaP) > 0:
         p_in_db_not_in_dbGaP_str = "\n".join(p_in_db_not_in_dbGaP)
         error_message = f"Error: Found participants in DB but not in dbGaP.\n{p_in_db_not_in_dbGaP_str}\n\n"
-        summary_str +=  error_message
+        summary_str += error_message
     else:
         # participants in DB are all found in dbGaP
         summary_str += f"INFO: All participants in DB found in dbGaP"
 
     # participants found in DB and dbGaP, but consent code is 0
-    p_in_db_in_dbGaP = [i for i in db_participant_list if i in dbgap_participant_dict.keys()]
+    p_in_db_in_dbGaP = [
+        i for i in db_participant_list if i in dbgap_participant_dict.keys()
+    ]
     p_consent_zero = [i for i in p_in_db_in_dbGaP if dbgap_participant_dict[i] == 0]
     if len(p_consent_zero) > 0:
         p_consent_zero_str = "\n".join(p_consent_zero)
         error_message = f"ERROR: Found participants in DB with consent code of 0 in dbGaP.\n{p_consent_zero_str}\n\n"
-        summary_str +=  error_message
+        summary_str += error_message
     else:
         # participants in DB and dbGaP, and no consent code 0 is found
         summary_str += "INFO: All participants in DB have consent code non-0"
@@ -100,23 +107,29 @@ def metadata_validation_str(
         i for i in dbgap_participant_dict.keys() if i not in db_participant_list
     ]
     # make sure these participants are not consent 0
-    p_in_dbGaP_not_in_db = [i for i in p_in_dbGaP_not_in_db if dbgap_participant_dict[i] != 0]
+    p_in_dbGaP_not_in_db = [
+        i for i in p_in_dbGaP_not_in_db if dbgap_participant_dict[i] != 0
+    ]
     if len(p_in_dbGaP_not_in_db) > 0:
         p_in_dbGaP_not_in_db_str = "\n".join(p_in_dbGaP_not_in_db)
         warn_message = f"WARNING: Found participants in dbGaP (consent non-0) but in DB.\n{p_in_dbGaP_not_in_db_str}\n\n"
         summary_str += warn_message
     else:
         # all participants in dbGaP found in DB
-        summary_str += "INFO: ALL participants in dbGaP (consent non-0) were found in DB"
+        summary_str += (
+            "INFO: ALL participants in dbGaP (consent non-0) were found in DB"
+        )
 
     # samples in DB but not in dbGaP
-    s_in_db_not_in_dbGaP = [i for i in db_sample_dict.keys() if i not in dbgap_sample_dict.keys()]
+    s_in_db_not_in_dbGaP = [
+        i for i in db_sample_dict.keys() if i not in dbgap_sample_dict.keys()
+    ]
     if len(s_in_db_not_in_dbGaP) > 0:
         s_in_db_not_in_dbGaP_w_participant = {
             k: db_sample_dict[k] for k in s_in_db_not_in_dbGaP
         }
         # identify if the parent of these samples are found in dbGaP
-        s_parent_in_dbgap =  []
+        s_parent_in_dbgap = []
         s_parent_not_in_dbgap = []
         for key in s_in_db_not_in_dbGaP_w_participant.keys():
             key_parent = s_in_db_not_in_dbGaP_w_participant[key]
@@ -126,14 +139,18 @@ def metadata_validation_str(
                 s_parent_not_in_dbgap.append({"Sample": key, "Participant": key_parent})
 
         if len(s_parent_in_dbgap) > 0:
-            s_parent_in_dbgap_df_str = pd.DataFrame.from_records(s_parent_in_dbgap).to_markdown(tablefmt="pipe", index=False)
+            s_parent_in_dbgap_df_str = pd.DataFrame.from_records(
+                s_parent_in_dbgap
+            ).to_markdown(tablefmt="pipe", index=False)
             warn_message = f"WARNING: Samples found in DB but not in dbGaP. However, they belong to participants registered in dbGaP.\n{s_parent_in_dbgap_df_str}\n\n"
             summary_str += warn_message
         else:
             pass
 
         if len(s_parent_not_in_dbgap) > 0:
-            s_parent_not_in_dbgap_df_str = pd.DataFrame.from_records(s_parent_not_in_dbgap).to_markdown(tablefmt="pipe", index=False)
+            s_parent_not_in_dbgap_df_str = pd.DataFrame.from_records(
+                s_parent_not_in_dbgap
+            ).to_markdown(tablefmt="pipe", index=False)
             error_message = f"ERROR: Samples found in DB but not in dbGaP. They belong to participants NOT registered in dbGaP.\n{s_parent_not_in_dbgap_df_str}\n\n"
             summary_str += error_message
         else:
@@ -143,10 +160,17 @@ def metadata_validation_str(
         summary_str += "INFO: Samples in DB passed validation"
 
     # sample in dbGaP not in DB
-    s_in_dbGaP_not_in_db = [i for i in dbgap_sample_dict.keys() if i not in db_sample_dict.keys()]
+    s_in_dbGaP_not_in_db = [
+        i for i in dbgap_sample_dict.keys() if i not in db_sample_dict.keys()
+    ]
     if len(s_in_dbGaP_not_in_db) > 0:
-        s_in_dbGaP_not_in_db_dict =  [{"Sample":k, "Participant": dbgap_sample_dict[k]} for k in s_in_dbGaP_not_in_db]
-        s_in_dbGaP_not_in_db_dict_str = pd.DataFrame.from_records(s_in_dbGaP_not_in_db_dict).to_markdown(tablefmt="pipe", index=False)
+        s_in_dbGaP_not_in_db_dict = [
+            {"Sample": k, "Participant": dbgap_sample_dict[k]}
+            for k in s_in_dbGaP_not_in_db
+        ]
+        s_in_dbGaP_not_in_db_dict_str = pd.DataFrame.from_records(
+            s_in_dbGaP_not_in_db_dict
+        ).to_markdown(tablefmt="pipe", index=False)
         warn_message = f"WARNING: Samples found in dbGaP but not found in DB.\n{s_in_dbGaP_not_in_db_dict_str}\n\n"
         summary_str += warn_message
     else:
@@ -154,19 +178,27 @@ def metadata_validation_str(
         summary_str += "INFO: Samples in dbGaP were all found in DB"
 
     # sample in both DB and dbGaP, but their parents/participant id don't match
-    s_in_dbgap_in_db = [i for i in db_sample_dict.keys() if i in dbgap_sample_dict.keys()]
+    s_in_dbgap_in_db = [
+        i for i in db_sample_dict.keys() if i in dbgap_sample_dict.keys()
+    ]
     parent_mismatch_list = []
     for s in s_in_dbgap_in_db:
         s_db_parent = db_sample_dict[s]
         s_dbgap_parent = dbgap_sample_dict[s]
         if s_db_parent != s_dbgap_parent:
-            s_dict = {"Sample":s, "dbGaP_subject_id": s_dbgap_parent, "DB_subject_id": s_db_parent}
+            s_dict = {
+                "Sample": s,
+                "dbGaP_subject_id": s_dbgap_parent,
+                "DB_subject_id": s_db_parent,
+            }
             parent_mismatch_list.append(s_dict)
         else:
             pass
     if len(parent_mismatch_list) > 0:
-        parent_mismatch_list_df_str =  pd.DataFrame.from_records(parent_mismatch_list).to_markdown(tablefmt="pipe", index=False)
-        error_message =  f"ERROR: Samples found associated with different participant ids between DB and dbGaP\n{parent_mismatch_list_df_str}\n\n"
+        parent_mismatch_list_df_str = pd.DataFrame.from_records(
+            parent_mismatch_list
+        ).to_markdown(tablefmt="pipe", index=False)
+        error_message = f"ERROR: Samples found associated with different participant ids between DB and dbGaP\n{parent_mismatch_list_df_str}\n\n"
         summary_str += error_message
     else:
         # all samples found in both dbgap and db share the identical subject id
@@ -180,9 +212,7 @@ def metadata_validation_str(
     log_prints=True,
     flow_run_name=f"datahub-metadata-validation-{get_time()}",
 )
-def validation_against_dbgap(
-    submission_id: str
-) -> None:
+def validation_against_dbgap(submission_id: str) -> None:
     logger = get_run_logger()
 
     # create a datahub mongodb
@@ -221,16 +251,21 @@ def validation_against_dbgap(
     )
 
     # validation
-    validation_str =  metadata_validation_str(db_participant_list=submission_participants, 
-                                              db_sample_dict=submission_samples, 
-                                              dbgap_participant_dict=study_particpant_dict, 
-                                              dbgap_sample_dict=study_sample_dict)
+    validation_str = metadata_validation_str(
+        db_participant_list=submission_participants,
+        db_sample_dict=submission_samples,
+        dbgap_participant_dict=study_particpant_dict,
+        dbgap_sample_dict=study_sample_dict,
+    )
     # create summary artifact
-    dbgap_validation_md(study_accession=study_accession, 
-                        study_version=study_version, 
-                        participant_count=len(submission_participants), 
-                        sample_count=len(submission_samples.keys()), 
-                        validationstr=validation_str)
+    dbgap_validation_md(
+        submission_id=submission_id,
+        study_accession=study_accession,
+        study_version=study_version,
+        participant_count=len(submission_participants),
+        sample_count=len(submission_samples.keys()),
+        validationstr=validation_str,
+    )
     return None
 
 
@@ -238,30 +273,36 @@ def validation_against_dbgap(
 def dbgap_validation_test() -> None:
 
     dh_mongo = DataHubMongoDB()
-    
-    #connection_str = dh_mongo._mongo_connection_str()
 
-    #db_name = dh_mongo._mongo_db_name()
+    # connection_str = dh_mongo._mongo_connection_str()
+
+    # db_name = dh_mongo._mongo_db_name()
 
     dbgap_id = dh_mongo.get_dbgap_id(
         submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
     )
-    print(f"dbGaP accessioin for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {dbgap_id}") # should expect phs002529
+    print(
+        f"dbGaP accessioin for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {dbgap_id}"
+    )  # should expect phs002529
 
     version_number = dh_mongo.get_study_version(
         submission_id="2a23e8ed-af03-4d8e-9ef7-ebd3af79611f"
     )
-    print(f"version for submission 2a23e8ed-af03-4d8e-9ef7-ebd3af79611f: {version_number}")
+    print(
+        f"version for submission 2a23e8ed-af03-4d8e-9ef7-ebd3af79611f: {version_number}"
+    )
 
     study_particpants = dh_mongo.get_study_participants(
         submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
     )
-    print(f"study participants for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {*study_particpants,}")
+    print(
+        f"study participants for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {*study_particpants,}"
+    )
 
     study_samples = dh_mongo.get_study_samples(
         submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
     )
-    sample_list = [key+":"+study_samples[key] for key in study_samples.keys()]
+    sample_list = [key + ":" + study_samples[key] for key in study_samples.keys()]
     print(
         f"study samples for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {*sample_list,}"
     )
