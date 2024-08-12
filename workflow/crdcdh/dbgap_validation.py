@@ -304,11 +304,11 @@ def metadata_validation_str(
     summary_str += p_in_db_consent_zero
 
     # samples in DB but not in dbGaP
-    s_not_in_dbgap = find_sample_not_in_dbgap(db_sample_dict=db_sample_dict, dbgap_sample_dict=db_sample_dict, dbgap_ptc_dict=dbgap_participant_dict)
+    s_not_in_dbgap = find_sample_not_in_dbgap(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict, dbgap_ptc_dict=dbgap_participant_dict)
     summary_str += s_not_in_dbgap
 
     # sample in dbGaP not in DB
-    s_not_in_db = find_sample_not_in_db(db_sample_dict=dbgap_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
+    s_not_in_db = find_sample_not_in_db(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
     summary_str += s_not_in_db
 
     # sample in both DB and dbGaP, but their parents/participant id don't match
