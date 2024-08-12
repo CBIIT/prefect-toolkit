@@ -152,7 +152,7 @@ def find_db_ptc_consent_zero(db_ptc_list: list, dbgap_ptc_dict: dict) -> str:
 
 
 def find_sample_not_in_dbgap(db_sample_dict: dict, dbgap_sample_dict: dict, dbgap_ptc_dict: dict) -> str:
-    """Returns a 
+    """Returns a summary string of samples in db not found in dbgap
 
     Args:
         db_sample_dict (dict): Sample dictionary in DB
@@ -165,6 +165,7 @@ def find_sample_not_in_dbgap(db_sample_dict: dict, dbgap_sample_dict: dict, dbga
     s_in_db_not_in_dbGaP = [
         i for i in db_sample_dict.keys() if i not in dbgap_sample_dict.keys()
     ]
+    message = ""
     if len(s_in_db_not_in_dbGaP) > 0:
         s_in_db_not_in_dbGaP_w_participant = {
             k: db_sample_dict[k] for k in s_in_db_not_in_dbGaP
@@ -183,7 +184,7 @@ def find_sample_not_in_dbgap(db_sample_dict: dict, dbgap_sample_dict: dict, dbga
             s_parent_in_dbgap_df_str = pd.DataFrame.from_records(
                 s_parent_in_dbgap
             ).to_markdown(tablefmt="pipe", index=False)
-            message = f"WARNING: {len(s_parent_in_dbgap)} Samples found in DB but not in dbGaP. However, they belong to participants registered in dbGaP.\n{s_parent_in_dbgap_df_str}\n\n"
+            message += f"WARNING: {len(s_parent_in_dbgap)} Sample(s) found in DB but not in dbGaP. However, they belong to participants registered in dbGaP.\n{s_parent_in_dbgap_df_str}\n\n"
         else:
             pass
 
@@ -191,12 +192,12 @@ def find_sample_not_in_dbgap(db_sample_dict: dict, dbgap_sample_dict: dict, dbga
             s_parent_not_in_dbgap_df_str = pd.DataFrame.from_records(
                 s_parent_not_in_dbgap
             ).to_markdown(tablefmt="pipe", index=False)
-            message = f"ERROR: {len(s_parent_not_in_dbgap)} Samples found in DB but not in dbGaP. They belong to participants NOT registered in dbGaP.\n{s_parent_not_in_dbgap_df_str}\n\n"
+            message += f"ERROR: {len(s_parent_not_in_dbgap)} Sample(s) found in DB but not in dbGaP. They belong to participants NOT registered in dbGaP.\n{s_parent_not_in_dbgap_df_str}\n\n"
         else:
             pass
     else:
         # all sample ids in DB found in dbGaP
-        message = "INFO: Samples in DB passed validation\n\n"
+        message += "INFO: Samples in DB passed validation\n\n"
     return message
 
 
@@ -221,7 +222,7 @@ def find_sample_not_in_db(db_sample_dict: dict, dbgap_sample_dict: dict) -> str:
         s_in_dbGaP_not_in_db_dict_str = pd.DataFrame.from_records(
             s_in_dbGaP_not_in_db_dict
         ).to_markdown(tablefmt="pipe", index=False)
-        message = f"WARNING: {len(s_in_dbGaP_not_in_db_dict)} Samples found in dbGaP but not found in DB.\n{s_in_dbGaP_not_in_db_dict_str}\n\n"
+        message = f"WARNING: {len(s_in_dbGaP_not_in_db_dict)} Sample(s) found in dbGaP but not found in DB.\n{s_in_dbGaP_not_in_db_dict_str}\n\n"
     else:
         # all sample id in dbGaP are found
         message = "INFO: Samples in dbGaP were all found in DB\n\n"
@@ -262,7 +263,7 @@ def sample_ptc_check(db_sample_dict: dict, dbgap_sample_dict: dict) -> str:
             parent_mismatch_list_df_str = pd.DataFrame.from_records(
                 parent_mismatch_list
             ).to_markdown(tablefmt="pipe", index=False)
-            message = f"ERROR: Samples found associated with different participant ids between DB and dbGaP\n{parent_mismatch_list_df_str}\n\n"
+            message = f"ERROR: {len(parent_mismatch_list)} Sample(s) found associated with different participant ids between DB and dbGaP\n{parent_mismatch_list_df_str}\n\n"
         else:
             # all samples found in both dbgap and db share the identical subject id
             message = f"INFO: Samples' participant ids match between DB and dbGaP\n\n"
