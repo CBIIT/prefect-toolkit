@@ -30,7 +30,7 @@ def dbgap_validation_md(
         validationstr (str): validation report str
     """
     if int(study_version) == 0:
-        study_version = "Not Found\n    - WARNING: Validation was performed using LATEST version found dbGaP API"
+        study_version = "Not Found [WARNING: Validation was performed using LATEST version found dbGaP API]"
     else:
         pass
     markdown_report = f"""# CRDCDH Metadata Validation Report - {get_time()}
@@ -112,7 +112,7 @@ def metadata_validation_str(
             # participants in DB and dbGaP, and no consent code 0 is found
             summary_str += "INFO: All participants in DB have consent code non-0\n\n"
     else:
-        summary_str += "WARNING: No overlap of participants found between DB and dbGaP"
+        summary_str += "WARNING: No overlap of participants found between DB and dbGaP\n\n"
 
     # participants found in dbGaP but not in DB
     p_in_dbGaP_not_in_db = [
@@ -131,7 +131,7 @@ def metadata_validation_str(
     else:
         # all participants in dbGaP found in DB
         summary_str += (
-            "INFO: ALL participants in dbGaP (consent non-0) were found in DB"
+            "INFO: ALL participants in dbGaP (consent non-0) were found in DB\n\n"
         )
 
     # samples in DB but not in dbGaP
@@ -171,7 +171,7 @@ def metadata_validation_str(
             pass
     else:
         # all sample ids in DB found in dbGaP
-        summary_str += "INFO: Samples in DB passed validation"
+        summary_str += "INFO: Samples in DB passed validation\n\n"
 
     # sample in dbGaP not in DB
     s_in_dbGaP_not_in_db = [
@@ -189,7 +189,7 @@ def metadata_validation_str(
         summary_str += warn_message
     else:
         # all sample id in dbGaP are found
-        summary_str += "INFO: Samples in dbGaP were all found in DB"
+        summary_str += "INFO: Samples in dbGaP were all found in DB\n\n"
 
     # sample in both DB and dbGaP, but their parents/participant id don't match
     s_in_dbgap_in_db = [
@@ -218,9 +218,9 @@ def metadata_validation_str(
             summary_str += error_message
         else:
             # all samples found in both dbgap and db share the identical subject id
-            summary_str += f"INFO: Samples' participant ids match between DB and dbGaP"
+            summary_str += f"INFO: Samples' participant ids match between DB and dbGaP\n\n"
     else:
-        summary_str += "WARNING: No overlap of samples found between DB and dbGaP"
+        summary_str += "WARNING: No overlap of samples found between DB and dbGaP\n\n"
     return summary_str
 
 
