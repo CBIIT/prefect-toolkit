@@ -22,18 +22,20 @@ def dbgap_validation_md(
     """Creates an artifact of metadata validation flow
 
     Args:
-        study_accession (str): _description_
-        study_version (str): _description_
-        participant_count (int): _description_
-        sample_count (int): _description_
-        tablestr (str): _description_
+        study_accession (str): study dbGaP accession str
+        study_version (str): study version str
+        participant_count (int): counts of participants
+        sample_count (int): counts of samples
+        validationstr (str): validation report str
     """
+    if int(study_version) == 0:
+        study_version = "Not Found\n\tWARNING: Validation was performed using LATEST version found dbGaP API"
     markdown_report = f"""# CRDCDH Metadata Validation Report
 ## {get_time()}
 
-- dbGaP accession: {study_accession}
+- dbGaP accession in DB: {study_accession}
 
-- dbGaP version: {study_version}
+- dbGaP version in DB: {study_version}
 
 - Participant count in DB: {participant_count}
 
@@ -218,7 +220,6 @@ def validation_against_dbgap(
         f"Samples found for study {study_accession} in dbGaP: {len(study_sample_dict.keys())}"
     )
 
-    """
     # validation
     validation_str =  metadata_validation_str(db_participant_list=submission_participants, 
                                               db_sample_dict=submission_samples, 
@@ -230,8 +231,8 @@ def validation_against_dbgap(
                         participant_count=len(submission_participants), 
                         sample_count=len(submission_samples.keys()), 
                         validationstr=validation_str)
-    """
-    
+    return None
+
 
 @flow(name="dbgap validation", log_prints=True)
 def dbgap_validation_test() -> None:
