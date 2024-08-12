@@ -63,78 +63,105 @@ def dbgap_validation_md(
     )
 
 
-def metadata_validation_str(
-    db_participant_list: list,
-    db_sample_dict: dict,
-    dbgap_participant_dict: dict,
-    dbgap_sample_dict: dict,
-) -> str:
-    """Returns a Dataframe of metadata validation
+def find_ptc_not_in_dbGaP(db_ptc_list: list, dbgap_ptc_dict: dict) -> str:
+    """Returns summary string of participants in DB, but not in dbGaP
 
     Args:
-        db_participant_list (list): A list of participant id in crdc datahub MongoDB
-        db_sample_list (list): A list of sample id in crdc datahub MongoDB
-        dbgap_participant_dict (dict): A dict of participants with participant id as key and consent code as value
-        dbgap_sample_dict (dict): A dict of samples with sample id as key and participant id as value
+        db_ptc_list (list): A list of participants in DB
+        dbgap_ptc_dict (dict): A dict of participants in dbGaP, with participant id as key
+                               and consent code as value
 
     Returns:
-        str: A string of validation summary
+        str: A summary str
     """
-    summary_str = ""
-
-    # participants in DB but not in dbGaP
     p_in_db_not_in_dbGaP = [
-        i for i in db_participant_list if i not in dbgap_participant_dict.keys()
+        i for i in db_ptc_list if i not in dbgap_ptc_dict.keys()
     ]
     if len(p_in_db_not_in_dbGaP) > 0:
         p_in_db_not_in_dbGaP_str = pd.DataFrame(
             p_in_db_not_in_dbGaP, columns=["Participant ID"]
         ).to_markdown(tablefmt="pipe", index=False)
-        error_message = f"ERROR: Found {len(p_in_db_not_in_dbGaP)} participant(s) in DB but not in dbGaP.\n{p_in_db_not_in_dbGaP_str}\n\n"
-        summary_str += error_message
+        message = f"ERROR: Found {len(p_in_db_not_in_dbGaP)} participant(s) in DB but not in dbGaP.\n{p_in_db_not_in_dbGaP_str}\n\n"
+
     else:
         # participants in DB are all found in dbGaP
-        summary_str += f"INFO: All participants in DB found in dbGaP"
+        message = f"INFO: All participants in DB found in dbGaP"
+    return message
 
-    # participants found in DB and dbGaP, but consent code is 0
-    p_in_db_in_dbGaP = [
-        i for i in db_participant_list if i in dbgap_participant_dict.keys()
-    ]
-    if len(p_in_db_in_dbGaP) > 0:
-        p_consent_zero = [i for i in p_in_db_in_dbGaP if dbgap_participant_dict[i] == 0]
-        if len(p_consent_zero) > 0:
-            p_consent_zero_str = pd.DataFrame(
-                p_consent_zero, columns=["Participant ID"]
-            ).to_markdown(tablefmt="pipe", index=False)
-            error_message = f"ERROR: Found {len(p_consent_zero)} participant(s) in DB with consent code of 0 in dbGaP.\n{p_consent_zero_str}\n\n"
-            summary_str += error_message
-        else:
-            # participants in DB and dbGaP, and no consent code 0 is found
-            summary_str += "INFO: All participants in DB have consent code non-0\n\n"
-    else:
-        summary_str += "WARNING: No overlap of participants found between DB and dbGaP\n\n"
 
-    # participants found in dbGaP but not in DB
+def find_ptc_not_in_db(db_ptc_list: list, dbgap_ptc_dict: dict) -> str:
+    """Returns summary string of participants in dbGaP not found in DB
+
+    Args:
+        db_ptc_list (list): A list of participants in DB
+        dbgap_ptc_dict (dict): A dict of participants in dbGaP, with participant id as key
+                               and consent code as value
+
+    Returns:
+        str: A summary str
+    """
     p_in_dbGaP_not_in_db = [
-        i for i in dbgap_participant_dict.keys() if i not in db_participant_list
+        i for i in dbgap_ptc_dict.keys() if i not in db_ptc_list
     ]
     # make sure these participants are not consent 0
     p_in_dbGaP_not_in_db = [
-        i for i in p_in_dbGaP_not_in_db if dbgap_participant_dict[i] != 0
+        i for i in p_in_dbGaP_not_in_db if dbgap_ptc_dict[i] != 0
     ]
     if len(p_in_dbGaP_not_in_db) > 0:
         p_in_dbGaP_not_in_db_str = pd.DataFrame(
             p_in_dbGaP_not_in_db, columns=["Participant ID"]
         ).to_markdown(tablefmt="pipe", index=False)
-        warn_message = f"WARNING: Found {len(p_in_dbGaP_not_in_db)} participant(s) in dbGaP (consent non-0) but in DB.\n{p_in_dbGaP_not_in_db_str}\n\n"
-        summary_str += warn_message
+        message = f"WARNING: Found {len(p_in_dbGaP_not_in_db)} participant(s) in dbGaP (consent non-0) but not in DB.\n{p_in_dbGaP_not_in_db_str}\n\n"
+
     else:
         # all participants in dbGaP found in DB
-        summary_str += (
-            "INFO: ALL participants in dbGaP (consent non-0) were found in DB\n\n"
-        )
+        message = "INFO: ALL participants in dbGaP (consent non-0) were found in DB\n\n"
+    return message
 
-    # samples in DB but not in dbGaP
+
+def find_db_ptc_consent_zero(db_ptc_list: list, dbgap_ptc_dict: dict) -> str:
+    """Returns summary string of participants found in both DB and dbGaP, but the consent code of them is 0
+
+    Args:
+        db_ptc_list (list): A list of participants in DB
+        dbgap_ptc_dict (dict): A dict of participants in dbGaP, with participant id as key
+                               and consent code as value
+
+    Returns:
+        str: A summary str
+    """
+    p_in_db_in_dbGaP = [
+        i for i in db_ptc_list if i in dbgap_ptc_dict.keys()
+    ]
+    if len(p_in_db_in_dbGaP) > 0:
+        p_consent_zero = [i for i in p_in_db_in_dbGaP if dbgap_ptc_dict[i] == 0]
+        if len(p_consent_zero) > 0:
+            p_consent_zero_str = pd.DataFrame(
+                p_consent_zero, columns=["Participant ID"]
+            ).to_markdown(tablefmt="pipe", index=False)
+            message = f"ERROR: Found {len(p_consent_zero)} participant(s) in DB with consent code of 0 in dbGaP.\n{p_consent_zero_str}\n\n"
+
+        else:
+            # participants in DB and dbGaP, and no consent code 0 is found
+            message = "INFO: All participants in DB have consent code non-0\n\n"
+    else:
+        message = (
+            "ERROR: No overlap of participants found between DB and dbGaP\n\n"
+        )
+    return message
+
+
+def find_sample_not_in_dbgap(db_sample_dict: dict, dbgap_sample_dict: dict, dbgap_ptc_dict: dict) -> str:
+    """Returns a 
+
+    Args:
+        db_sample_dict (dict): Sample dictionary in DB
+        dbgap_sample_dict (dict): Sample dictionary in dbGaP
+        dbgap_ptc_dict (dict): Participant dictionary in dbGaP
+
+    Returns:
+        str: A summary string
+    """    
     s_in_db_not_in_dbGaP = [
         i for i in db_sample_dict.keys() if i not in dbgap_sample_dict.keys()
     ]
@@ -147,7 +174,7 @@ def metadata_validation_str(
         s_parent_not_in_dbgap = []
         for key in s_in_db_not_in_dbGaP_w_participant.keys():
             key_parent = s_in_db_not_in_dbGaP_w_participant[key]
-            if key_parent in dbgap_participant_dict.keys():
+            if key_parent in dbgap_ptc_dict.keys():
                 s_parent_in_dbgap.append({"Sample": key, "Participant": key_parent})
             else:
                 s_parent_not_in_dbgap.append({"Sample": key, "Participant": key_parent})
@@ -156,8 +183,7 @@ def metadata_validation_str(
             s_parent_in_dbgap_df_str = pd.DataFrame.from_records(
                 s_parent_in_dbgap
             ).to_markdown(tablefmt="pipe", index=False)
-            warn_message = f"WARNING: {len(s_parent_in_dbgap)} Samples found in DB but not in dbGaP. However, they belong to participants registered in dbGaP.\n{s_parent_in_dbgap_df_str}\n\n"
-            summary_str += warn_message
+            message = f"WARNING: {len(s_parent_in_dbgap)} Samples found in DB but not in dbGaP. However, they belong to participants registered in dbGaP.\n{s_parent_in_dbgap_df_str}\n\n"
         else:
             pass
 
@@ -165,15 +191,25 @@ def metadata_validation_str(
             s_parent_not_in_dbgap_df_str = pd.DataFrame.from_records(
                 s_parent_not_in_dbgap
             ).to_markdown(tablefmt="pipe", index=False)
-            error_message = f"ERROR: {len(s_parent_not_in_dbgap)} Samples found in DB but not in dbGaP. They belong to participants NOT registered in dbGaP.\n{s_parent_not_in_dbgap_df_str}\n\n"
-            summary_str += error_message
+            message = f"ERROR: {len(s_parent_not_in_dbgap)} Samples found in DB but not in dbGaP. They belong to participants NOT registered in dbGaP.\n{s_parent_not_in_dbgap_df_str}\n\n"
         else:
             pass
     else:
         # all sample ids in DB found in dbGaP
-        summary_str += "INFO: Samples in DB passed validation\n\n"
+        message = "INFO: Samples in DB passed validation\n\n"
+    return message
 
-    # sample in dbGaP not in DB
+
+def find_sample_not_in_db(db_sample_dict: dict, dbgap_sample_dict: dict) -> str:
+    """Returns a summary string of samples in dbGaP not found in DB
+
+    Args:
+        db_sample_dict (dict): Sample dictionary in DB
+        dbgap_sample_dict (dict): Sample dictionary in dbGaP
+
+    Returns:
+        str: A summary string
+    """
     s_in_dbGaP_not_in_db = [
         i for i in dbgap_sample_dict.keys() if i not in db_sample_dict.keys()
     ]
@@ -185,13 +221,25 @@ def metadata_validation_str(
         s_in_dbGaP_not_in_db_dict_str = pd.DataFrame.from_records(
             s_in_dbGaP_not_in_db_dict
         ).to_markdown(tablefmt="pipe", index=False)
-        warn_message = f"WARNING: {len(s_in_dbGaP_not_in_db_dict)} Samples found in dbGaP but not found in DB.\n{s_in_dbGaP_not_in_db_dict_str}\n\n"
-        summary_str += warn_message
+        message = f"WARNING: {len(s_in_dbGaP_not_in_db_dict)} Samples found in dbGaP but not found in DB.\n{s_in_dbGaP_not_in_db_dict_str}\n\n"
     else:
         # all sample id in dbGaP are found
-        summary_str += "INFO: Samples in dbGaP were all found in DB\n\n"
+        message = "INFO: Samples in dbGaP were all found in DB\n\n"
 
-    # sample in both DB and dbGaP, but their parents/participant id don't match
+    return message
+
+
+def sample_ptc_check(db_sample_dict: dict, dbgap_sample_dict: dict) -> str:
+    """Returns a summmary string of samples with mismatches of participants
+    between DB and dbGaP
+
+    Args:
+        db_sample_dict (dict): Sample dictionary in DB
+        dbgap_sample_dict (dict): Sample dictionary in dbGaP
+
+    Returns:
+        str: A summary string
+    """
     s_in_dbgap_in_db = [
         i for i in db_sample_dict.keys() if i in dbgap_sample_dict.keys()
     ]
@@ -214,13 +262,59 @@ def metadata_validation_str(
             parent_mismatch_list_df_str = pd.DataFrame.from_records(
                 parent_mismatch_list
             ).to_markdown(tablefmt="pipe", index=False)
-            error_message = f"ERROR: Samples found associated with different participant ids between DB and dbGaP\n{parent_mismatch_list_df_str}\n\n"
-            summary_str += error_message
+            message = f"ERROR: Samples found associated with different participant ids between DB and dbGaP\n{parent_mismatch_list_df_str}\n\n"
         else:
             # all samples found in both dbgap and db share the identical subject id
-            summary_str += f"INFO: Samples' participant ids match between DB and dbGaP\n\n"
+            message = f"INFO: Samples' participant ids match between DB and dbGaP\n\n"
     else:
-        summary_str += "WARNING: No overlap of samples found between DB and dbGaP\n\n"
+        message = "ERROR: No overlap of samples found between DB and dbGaP\n\n"
+    return message
+
+def metadata_validation_str(
+    db_participant_list: list,
+    db_sample_dict: dict,
+    dbgap_participant_dict: dict,
+    dbgap_sample_dict: dict,
+) -> str:
+    """Returns a Dataframe of metadata validation
+
+    Args:
+        db_participant_list (list): A list of participant id in crdc datahub MongoDB
+        db_sample_list (list): A list of sample id in crdc datahub MongoDB
+        dbgap_participant_dict (dict): A dict of participants with participant id as key and consent code as value
+        dbgap_sample_dict (dict): A dict of samples with sample id as key and participant id as value
+
+    Returns:
+        str: A string of validation summary
+    """
+    summary_str = ""
+
+    # participants in DB but not in dbGaP
+    ptc_not_in_dbgap = find_ptc_not_in_dbGaP(
+        db_ptc_list=db_participant_list, dbgap_ptc_dict=dbgap_participant_dict
+    )
+    summary_str += ptc_not_in_dbgap
+
+    # participants found in dbGaP but not in DB
+    ptc_not_in_db = find_ptc_not_in_db(db_ptc_list=db_participant_list, dbgap_ptc_dict=dbgap_participant_dict)
+    summary_str += ptc_not_in_db
+
+    # participants found in DB and dbGaP, but consent code is 0
+    p_in_db_consent_zero = find_db_ptc_consent_zero(db_ptc_list=db_participant_list, dbgap_ptc_dict=dbgap_participant_dict)
+    summary_str += p_in_db_consent_zero
+
+    # samples in DB but not in dbGaP
+    s_not_in_dbgap = find_sample_not_in_dbgap(db_sample_dict=db_sample_dict, dbgap_sample_dict=db_sample_dict, dbgap_ptc_dict=dbgap_participant_dict)
+    summary_str += s_not_in_dbgap
+
+    # sample in dbGaP not in DB
+    s_not_in_db = find_sample_not_in_db(db_sample_dict=dbgap_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
+    summary_str += s_not_in_db
+
+    # sample in both DB and dbGaP, but their parents/participant id don't match
+    s_ptc_match = sample_ptc_check(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
+    summary_str += s_ptc_match
+
     return summary_str
 
 
