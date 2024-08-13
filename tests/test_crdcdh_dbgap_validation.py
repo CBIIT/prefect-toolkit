@@ -30,6 +30,7 @@ import pytest
     ],
 )
 def test_find_ptc_not_in_dbGaP(db_ptc_list, dbgap_ptc_dict, expected):
+    """test for find_ptc_not_in_dbgap"""
     test_message = find_ptc_not_in_dbGaP(db_ptc_list=db_ptc_list, dbgap_ptc_dict=dbgap_ptc_dict)
     assert expected in test_message
 
@@ -50,6 +51,7 @@ def test_find_ptc_not_in_dbGaP(db_ptc_list, dbgap_ptc_dict, expected):
     ],
 )
 def test_find_ptc_not_in_db(db_ptc_list, dbgap_ptc_dict, expected):
+    """test for ptc_not_in_db"""
     test_message = find_ptc_not_in_db(db_ptc_list=db_ptc_list, dbgap_ptc_dict=dbgap_ptc_dict)
     assert expected in test_message
 
@@ -74,6 +76,7 @@ def test_find_ptc_not_in_db(db_ptc_list, dbgap_ptc_dict, expected):
     ],
 )
 def test_find_db_ptc_consent_zero(db_ptc_list, dbgap_ptc_dict, expected):
+    """test for find_db_ptc_consent_zero"""
     test_message = find_db_ptc_consent_zero(db_ptc_list=db_ptc_list, dbgap_ptc_dict=dbgap_ptc_dict)
     assert expected in test_message
 
@@ -114,6 +117,7 @@ def test_find_db_ptc_consent_zero(db_ptc_list, dbgap_ptc_dict, expected):
 def test_find_sample_not_in_dbgap(
     db_sample_dict, dbgap_sample_dict, dbgap_ptc_dict, expected
 ):
+    """test for find_sample_not_in_dbgap"""
     test_message = find_sample_not_in_dbgap(
         db_sample_dict=db_sample_dict,
         dbgap_sample_dict=dbgap_sample_dict,
@@ -146,6 +150,7 @@ def test_find_sample_not_in_dbgap(
     ],
 )
 def test_find_sample_not_in_db(db_sample_dict, dbgap_sample_dict, expected):
+    """test for find_sample_not_in_db"""
     test_message = find_sample_not_in_db(
         db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict
     )
@@ -173,6 +178,7 @@ def test_find_sample_not_in_db(db_sample_dict, dbgap_sample_dict, expected):
     ],
 )
 def test_sample_ptc_check(db_sample_dict, dbgap_sample_dict, expected):
+    """test for sample_ptc_check"""
     test_message = sample_ptc_check(
         db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict
     )

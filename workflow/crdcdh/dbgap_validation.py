@@ -30,7 +30,7 @@ def dbgap_validation_md(
         validationstr (str): validation report str
     """
     if int(study_version) == 0:
-        study_version = "Not Found [WARNING: Validation was performed using LATEST version found dbGaP API]"
+        study_version = "Not Found [WARNING: Validation was performed using LATEST version found through dbGaP API]"
     else:
         pass
     markdown_report = f"""# CRDCDH Metadata Validation Report - {get_time()}
