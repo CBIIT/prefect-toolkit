@@ -271,6 +271,7 @@ def sample_ptc_check(db_sample_dict: dict, dbgap_sample_dict: dict) -> str:
         message = "ERROR: No overlap of samples found between DB and dbGaP\n\n"
     return message
 
+
 def metadata_validation_str(
     db_participant_list: list,
     db_sample_dict: dict,

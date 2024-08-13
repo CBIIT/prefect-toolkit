@@ -186,9 +186,12 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             query_return_list = record_collection.find({"submissionID":submission_id, "nodeType":"participant"},{"nodeID":1, "props.participant_id":1})
             # we assume this submission id is only associated with one study
             participant_list = []
-            for item in query_return_list:
-                item_id =  item["props"]["participant_id"]
-                participant_list.append(item_id)
+            if record_collection.count_documents({"submissionID":submission_id, "nodeType":"participant"}) > 0:
+                for item in query_return_list:
+                    item_id =  item["props"]["participant_id"]
+                    participant_list.append(item_id)
+            else:
+                pass
             return participant_list
         except errors.PyMongoError as pe:
             print(f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}")
