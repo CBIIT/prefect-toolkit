@@ -1,7 +1,7 @@
 from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from src.commons.utils import get_time
-from src.crdcdh.metadata_validation import DataHubMongoDB
+from src.crdcdh.dh_mongodb import DataHubMongoDB
 from src.commons.dbgap_sstr import SstrHaul
 from typing import TypeVar
 import pandas as pd
@@ -379,45 +379,4 @@ def validation_against_dbgap(submission_id: str) -> None:
         sample_count=len(submission_samples.keys()),
         validationstr=validation_str,
     )
-    return None
-
-
-@flow(name="dbgap validation", log_prints=True)
-def dbgap_validation_test() -> None:
-
-    dh_mongo = DataHubMongoDB()
-
-    # connection_str = dh_mongo._mongo_connection_str()
-
-    # db_name = dh_mongo._mongo_db_name()
-
-    dbgap_id = dh_mongo.get_dbgap_id(
-        submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
-    )
-    print(
-        f"dbGaP accessioin for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {dbgap_id}"
-    )  # should expect phs002529
-
-    version_number = dh_mongo.get_study_version(
-        submission_id="2a23e8ed-af03-4d8e-9ef7-ebd3af79611f"
-    )
-    print(
-        f"version for submission 2a23e8ed-af03-4d8e-9ef7-ebd3af79611f: {version_number}"
-    )
-
-    study_particpants = dh_mongo.get_study_participants(
-        submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
-    )
-    print(
-        f"study participants for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {*study_particpants,}"
-    )
-
-    study_samples = dh_mongo.get_study_samples(
-        submission_id="eaee9cf0-5d42-43f6-8e1b-8ef3df072884"
-    )
-    sample_list = [key + ":" + study_samples[key] for key in study_samples.keys()]
-    print(
-        f"study samples for submission eaee9cf0-5d42-43f6-8e1b-8ef3df072884: {*sample_list,}"
-    )
-
     return None
