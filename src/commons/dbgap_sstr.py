@@ -48,7 +48,7 @@ class SstrHaul:
             int(self.version_str)
             latest_version_found = self.get_latest_version()
             if int(self.version_str) > latest_version_found:
-                raise ValueError(f"Version in DB is bigger than the latest version vailable in dbGaP:\n- dbGaP latest version: {latest_version_found}\n- DB latest version: {self.version_str}")
+                raise ValueError(f"Version in DB is bigger than the latest version vailable in dbGaP:\n- dbGaP latest version: {latest_version_found}\n- Submitted version in DB: {self.version_str}")
             else:
                 pass
             return True
