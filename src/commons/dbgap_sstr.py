@@ -33,18 +33,24 @@ class SstrHaul:
             return True
 
     def _validate_version(self) -> bool:
-        """Validates version str
+        """Validates version str if it is a valid number or if the version is bigger 
+        than the latest version found in dbGaP API
 
         Raises:
             ValueError: Error raised if invalid version number used
 
         Returns:
-            bool: _description_
+            bool: Returns True if validation passes
 
         Example of version_str: "2"
         """        
         try:
             int(self.version_str)
+            latest_version_found = self.get_latest_version()
+            if int(self.version_str) > latest_version_found:
+                raise ValueError(f"Version in DB is bigger than the latest version vailable in dbGaP:\n- dbGaP latest version: {latest_version_found}\n- DB latest version: {self.version_str}")
+            else:
+                pass
             return True
         except ValueError as err:
             raise ValueError(f"Invalid version number detected: {self.version_str}")
@@ -71,6 +77,17 @@ class SstrHaul:
             return f"/study/{self.phs_accession}/subjects"
         else:
             return f"/study/{self.phs_accession}.v{self.version_str}/subjects"
+
+    def get_latest_version(self) -> str:
+        """Returns the latest version of a study from NCBI API
+
+        Returns:
+            str: A string of versioin number
+        """
+        study_request_url = self.base_url + f"/study/{self.phs_accession}/summary"
+        request_response =  self._get_response(request_url=study_request_url)
+        latest_version_available = request_response["study"]["accver"]["version"]
+        return latest_version_available
 
     def get_participant_cnt(self) -> int:
         """Returns subject counts of a study of a specific version
