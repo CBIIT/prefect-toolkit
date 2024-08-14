@@ -147,7 +147,6 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             )
             if record_collection.count_documents({"submissionID": submission_id, "nodeType": "study"}) > 0:
                 # we are only looking at the first record
-                print(record_collection.count_documents({"submissionID": submission_id, "nodeType": "study"}))
                 study_version_str = record_collection_query[0]["props"]["study_version"]
                 study_version = self._find_latest_version(
                     study_version_str=study_version_str
