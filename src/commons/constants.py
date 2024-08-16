@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class CrdcDHMongoSecrets:
@@ -9,4 +9,21 @@ class CrdcDHMongoSecrets:
     submission_collection = "submissions"
     datarecord_colleciton = "dataRecords"
 
-
+@dataclass
+class CommonsRepo:
+    icdc: dict = field(
+        default_factory=lambda: {
+            "repo": "https://github.com/CBIIT/icdc-model-tool",
+            "model_yaml": "model-desc/icdc-model.yml",
+            "props_yaml": "model-desc/icdc-model-props.yml",
+            "tags_api": "https://api.github.com/repos/CBIIT/icdc-model-tool/tags",
+        }
+    )
+    ccdi: dict = field(
+        default_factory=lambda: {
+            "repo": "https://github.com/CBIIT/ccdi-model",
+            "model_yaml": "model-desc/ccdi-model.yml",
+            "props_yaml": "model-desc/ccdi-model-props.yml",
+            "tags_api": "https://api.github.com/repos/CBIIT/ccdi-model/tags",
+        }
+    )
