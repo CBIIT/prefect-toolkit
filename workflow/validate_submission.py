@@ -131,6 +131,7 @@ def validate_submission_tsv(submission_loc: str, commons_name: str, tag: str, va
     )
     valid_obj = SubmVal(filepath_list=file_list)
     model_obj = ReadDataModel(model_file = model_yaml, prop_file=props_yaml)
+
     output_name = os.path.basename(submission_folder.strip("/")) + "_validation_report_" + get_date() + ".txt"
     logger.info("Starting validation")
     write_report(valid_object=valid_obj, datamodel_object=model_obj, submission_folder=submission_folder, output_name=output_name)
@@ -140,4 +141,17 @@ def validate_submission_tsv(submission_loc: str, commons_name: str, tag: str, va
     output_folder = os.path.join(runner, "submission_validation_" + get_time())
     AwsUtils.file_ul(bucket=val_output_bucket, output_folder=output_folder, newfile=output_name)
     logger.info(f"Uploaded output {output_name} to bucket {val_output_bucket} folder path {output_folder}")
+
+    # write prop dict to file and upload to db
+    prop_dict_df = model_obj.get_prop_dict_df()
+    prop_dict_df.to_csv("props_dict_table.tsv", sep="\t", index=False)
+    AwsUtils.file_ul(
+        bucket=val_output_bucket,
+        output_folder=output_folder,
+        newfile="props_dict_table.tsv",
+    )
+    logger.info(
+        f"Uploaded props_dict_table.tsv to bucket {val_output_bucket} folder path {output_folder}"
+    )
+
     return None
