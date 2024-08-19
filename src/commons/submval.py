@@ -281,6 +281,7 @@ Property YAML file:
             # this means we have at least one property in this node type has
             # enum value
             for property in properties:
+                print(property)
                 # print(f"property: {property}")
                 if property in prop_df_node["Property"].tolist():
                     # property type has "enum" in it
@@ -290,6 +291,7 @@ Property YAML file:
                     property_type = prop_df_node.loc[
                         prop_df_node["Property"] == property, "Type"
                     ]
+                    print(property_type)
                     property_enum_list = prop_df_node.loc[
                         prop_df_node["Property"] == property, "Example value"
                     ].tolist()[0]
