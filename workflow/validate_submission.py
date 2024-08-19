@@ -42,7 +42,15 @@ def download_model_files(commons_acronym: str, tag: str) -> tuple:
     return data_model_yaml, props_yaml
 
 @flow(name="Writing Validation Report", log_prints=True)
-def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submission_folder: str, output_name: str) -> str:
+def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submission_folder: str, output_name: str) -> None:
+    """Prefect flow which writes validatioin report
+
+    Args:
+        valid_object (SubmVal): SubmVal object
+        datamodel_object (ReadDataModel): ReadDataModel object
+        submission_folder (str): Name of the tsv folder
+        output_name (str): Validation report output name
+    """    
     # write header
     report_header = SubmVal.report_header(
         report_path=output_name,
@@ -91,7 +99,7 @@ def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submiss
 
 @flow(name="Validate Submission Files")
 def validate_submission_tsv(submission_loc: str, commons_name: str, tag: str, val_output_bucket: str, runner: str, exclude_node_type: list = []) -> None:
-    """Validates a folder of submission tsv files against data model
+    """Prefect flow which aalidates a folder of submission tsv files against data model
 
     Args:
         submission_loc (str): Location of submission files (tsv)
