@@ -98,15 +98,15 @@ def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submiss
 
 @flow(name="Validate Submission Files")
 def validate_submission_tsv(submission_loc: str, commons_name: str, tag: str, val_output_bucket: str, runner: str, exclude_node_type: list = []) -> None:
-    """Prefect flow which aalidates a folder of submission tsv files against data model
+    """Prefect flow which validates a folder of submission tsv files against data model
 
     Args:
         submission_loc (str): Location of submission files (tsv)
         commons_name (str): Commons acronym
-        tag (str): tag of the data model
+        tag (str): Tag name of the data model
         val_output_bucket (str): Bucket of where validation output be uploaded to
         runner (str): Unique runner name
-        exclude_node_type (list, optional): List of node to exclude. Defaults to [].
+        exclude_node_type (list, optional): List of nodes to exclude. Defaults to [].
     """
     logger = get_run_logger()
     # download submission file folder

@@ -5,7 +5,6 @@ from src.crdcdh.dh_mongodb import DataHubMongoDB
 from src.commons.dbgap_sstr import SstrHaul
 from typing import TypeVar
 import pandas as pd
-import json
 
 
 DataFrame = TypeVar("DataFrame")
