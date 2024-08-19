@@ -778,7 +778,7 @@ Property YAML file:
             file_prop_df = prop_df.loc[
                 prop_df["Node"] == file_type, ["Property", "Node", "Key"]
             ]
-            validation_str_file = self._validate_cross_links_one_file(
+            validation_str_file = self._validate_unique_key_id_one_file(
                 filepath=file, node_key_df=file_prop_df
             )
             validation_str = validation_str + validation_str_file
