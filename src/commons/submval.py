@@ -64,7 +64,7 @@ Model YAML file:
 Property YAML file: 
         - {prop_file}
 
-    """
+"""
         return report_header
 
     def _validate_required_properties_one_file(
@@ -80,7 +80,10 @@ Property YAML file:
             str: A string of validation summary of a file
         """
         file_df = self.read_tsv(file_path=filepath)
+        print(file_df)
         node_type = self.get_type(file_path=filepath)
+        print(node_type)
+        print(req_prop_list)
         properties = file_df.columns
         print_str = f"\n\t{node_type}\n\t----------\n\t"
         # report if all req_prop_list properties are found in the file
@@ -96,6 +99,7 @@ Property YAML file:
         # loop through every prop in properties, and check if prop is required
         check_list = []
         for property in properties:
+            print(property)
             if property in req_prop_list:
                 proprety_dict = {}
                 proprety_dict["node"] = node_type
@@ -112,7 +116,9 @@ Property YAML file:
                 check_list.append(proprety_dict)
             else:
                 pass
+        
         check_df = pd.DataFrame.from_records(check_list)
+        print(check_df)
         # wrape the text of error row if the length exceeds 25
         if check_df.shape[0] > 0:
             check_df["error row"] = check_df["error row"].str.wrap(25)
