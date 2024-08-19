@@ -6,6 +6,7 @@ from typing import TypeVar
 
 DataFrame = TypeVar("DataFrame")
 
+
 class SubmVal(ReadSubmTsv):
     """A class performs validation on submission tsv files"""
 
@@ -37,7 +38,9 @@ class SubmVal(ReadSubmTsv):
         return return_str
 
     @staticmethod
-    def report_header(report_path: str, tsv_folder_path: str, model_file: str, prop_file: str) -> str:
+    def report_header(
+        report_path: str, tsv_folder_path: str, model_file: str, prop_file: str
+    ) -> str:
         """Returns a string that can render report header
 
         Args:
@@ -116,7 +119,7 @@ Property YAML file:
                 check_list.append(proprety_dict)
             else:
                 pass
-        
+
         check_df = pd.DataFrame.from_records(check_list)
         print(check_df)
         # wrape the text of error row if the length exceeds 25
@@ -134,9 +137,7 @@ Property YAML file:
         )
         return print_str
 
-    def validate_required_properties(
-        self, data_model: ReadDataModel
-    ) -> str:
+    def validate_required_properties(self, data_model: ReadDataModel) -> str:
         """Validates required properties for a list of tsv files
 
         Args:
@@ -155,9 +156,16 @@ Property YAML file:
         for file in self.filepath_list:
             file_type = self.get_type(file_path=file)
 
+            # CCDI uses True/False in req field, while icdc uses Yes/No/Preferred in req field
+            if "Yes" in prop_df["Required"].unique().tolist():
+                required_value = "Yes"
+            else:
+                required_value = True
+
             required_prop_list = (
                 prop_df[
-                    (prop_df["Node"] == file_type) & (prop_df["Required"] == "Yes")
+                    (prop_df["Node"] == file_type)
+                    & (prop_df["Required"] == required_value)
                 ]["Property"]
                 .unique()
                 .tolist()
@@ -227,9 +235,7 @@ Property YAML file:
         )
         return print_str
 
-    def validate_whitespace_issue(
-        self
-    ) -> str:
+    def validate_whitespace_issue(self) -> str:
         """Validate whitespace issue for a list of tsv files
 
         Returns:
@@ -384,9 +390,7 @@ Property YAML file:
         )
         return print_str
 
-    def validate_terms_value_sets(
-        self, data_model: ReadDataModel
-    ) -> str:
+    def validate_terms_value_sets(self, data_model: ReadDataModel) -> str:
         """Validate terms and value sets for a list of tsv files
 
         Args:
@@ -409,7 +413,9 @@ Property YAML file:
         return_str = section_title + validation_str
         return return_str
 
-    def _validate_numeric_integer_one_file(self, filepath: str, file_numeric_dict: dict) -> str:
+    def _validate_numeric_integer_one_file(
+        self, filepath: str, file_numeric_dict: dict
+    ) -> str:
         """Returns a summary string of numeric integer validation of a tsv file
 
         Args:
@@ -503,9 +509,7 @@ Property YAML file:
         )
         return print_str
 
-    def validate_numeric_integer(self, 
-        data_model: ReadDataModel
-    ) -> str:   
+    def validate_numeric_integer(self, data_model: ReadDataModel) -> str:
         """Validates integer and numeric properties for a list of tsv files
 
         Args:
@@ -543,7 +547,9 @@ Property YAML file:
         return_str = section_title + validation_str
         return return_str
 
-    def _validate_cross_links_one_file(self, filepath: str, type_mapping_dict: dict) -> str:
+    def _validate_cross_links_one_file(
+        self, filepath: str, type_mapping_dict: dict
+    ) -> str:
         """Returns a summary str of validation on cross links of a tsv file
 
         Args:
@@ -552,7 +558,7 @@ Property YAML file:
 
         Returns:
             str: A summary string of a tsv file
-        """        
+        """
         file_df = self.read_tsv(file_path=filepath)
         file_type = self.get_type(file_path=filepath)
         print_str = f"\n\t{file_type}\n\t----------\n"
@@ -624,7 +630,9 @@ Property YAML file:
 
                     parent_file = type_mapping_dict[parent_type]
                     parent_df = self.read_tsv(file_path=parent_file)
-                    linking_values = parent_df[parent_type_key].dropna().unique().tolist()
+                    linking_values = (
+                        parent_df[parent_type_key].dropna().unique().tolist()
+                    )
 
                     # test to see if all the values are found
                     # all True if all values in link_values can be found in linking values(parent node sheet id)
@@ -644,7 +652,9 @@ Property YAML file:
                         property_dict["check"] = "PASS"
                         property_dict["error value"] = ""
                 else:
-                    property_dict["check"] = f"ERROR:\nFile for [{parent_type}] not found"
+                    property_dict["check"] = (
+                        f"ERROR:\nFile for [{parent_type}] not found"
+                    )
                     property_dict["error value"] = ""
             else:
                 property_dict["check"] = "empty"
@@ -675,7 +685,7 @@ Property YAML file:
         """
         section_title = (
             "\n\n"
-            + self.section_header(section_name = "Cross Links Check")
+            + self.section_header(section_name="Cross Links Check")
             + "\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------\n"
         )
         type_mapping_dict = self.file_type_mapping(filepath_list=self.filepath_list)
@@ -688,7 +698,9 @@ Property YAML file:
         return_str = section_title + validation_str
         return return_str
 
-    def _validate_unique_key_id_one_file(self, filepath: str, node_key_df: DataFrame) -> str:
+    def _validate_unique_key_id_one_file(
+        self, filepath: str, node_key_df: DataFrame
+    ) -> str:
         """Validate key id in a file that has key property
 
         Args:
@@ -755,13 +767,12 @@ Property YAML file:
             )
         else:
             print_str = (
-                print_str + f"WARNING: node {file_type} file contains no Key id property\n"
+                print_str
+                + f"WARNING: node {file_type} file contains no Key id property\n"
             )
         return print_str
 
-    def validate_unique_key_id(
-        self, data_model: ReadDataModel
-    ) -> str:
+    def validate_unique_key_id(self, data_model: ReadDataModel) -> str:
         """Validates unique key id for a list of tsv files
 
         Args:
