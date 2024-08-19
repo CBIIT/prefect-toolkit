@@ -5,37 +5,43 @@ from prefect import get_run_logger, flow, task
 import os
 
 
-@task(name="Validate Required Properties")
+@task(name="Validate Required Properties", log_prints=True)
 def val_required(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
     validation_str =  valid_object.validate_required_properties(data_model=datamodel_obj)
     return validation_str
 
-@task(name="Validate Whitespace")
+
+@task(name="Validate Whitespace", log_prints=True)
 def val_whitespace(valid_object: SubmVal) -> str:
     validation_str = valid_object.validate_whitespace_issue()
     return validation_str
 
-@task(name="Validate Numeric and Integer Properties")
+
+@task(name="Validate Numeric and Integer Properties", log_prints=True)
 def val_numeric(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
     validation_str = valid_object.validate_numeric_integer(data_model=datamodel_obj)
     return validation_str
 
-@task(name="Validate Terms and Value Sets")
+
+@task(name="Validate Terms and Value Sets", log_prints=True)
 def val_terms(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
     validation_str = valid_object.validate_terms_value_sets(data_model=datamodel_obj)
     return validation_str
 
-@task(name="Validate Cross Links")
+
+@task(name="Validate Cross Links", log_prints=True)
 def val_crosslinks(valid_object: SubmVal) -> str:
     validation_str = valid_object.validate_cross_links()
     return validation_str
 
-@task(name="Validate Unique Key ID")
+
+@task(name="Validate Unique Key ID", log_prints=True)
 def val_keyid(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
     validation_str = valid_object.validate_unique_key_id(data_model=datamodel_obj)
     return validation_str
 
-@task(name="Extract Model Files")
+
+@task(name="Extract Model Files", log_prints=True)
 def download_model_files(commons_acronym: str, tag: str) -> tuple:
     data_model_yaml, props_yaml = GetDataModel.dl_model_files(commons_acronym=commons_acronym, tag=tag)
     return data_model_yaml, props_yaml
@@ -96,7 +102,8 @@ def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submiss
         outf.write(key_validation)
     print("Unique key id validation finished")
 
-@flow(name="Validate Submission Files")
+
+@flow(name="Validate Submission Files", log_prints=True)
 def validate_submission_tsv(submission_loc: str, commons_name: str, tag: str, val_output_bucket: str, runner: str, exclude_node_type: list = []) -> None:
     """Prefect flow which validates a folder of submission tsv files against data model
 
