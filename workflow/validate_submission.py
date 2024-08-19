@@ -1,6 +1,5 @@
 from src.commons.submval import SubmVal
 from src.commons.datamodel import ReadDataModel, GetDataModel
-from src.commons.constants import CommonsRepo
 from src.commons.utils import AwsUtils, get_date, get_time
 from prefect import get_run_logger, flow, task
 from typing import TypeVar
