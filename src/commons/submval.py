@@ -1,4 +1,4 @@
-from datamodel import ReadDataModel
+from src.commons.datamodel import ReadDataModel
 from src.commons.utils import ReadSubmTsv
 import numpy as np
 import pandas as pd
