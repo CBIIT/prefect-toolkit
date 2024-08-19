@@ -101,8 +101,8 @@ def validate_submission_tsv(submission_loc: str, commons_name: str, tag: str, va
     """Prefect flow which validates a folder of submission tsv files against data model
 
     Args:
-        submission_loc (str): Location of submission files (tsv)
-        commons_name (str): Commons acronym
+        submission_loc (str): Bucket location of submission files (tsv)
+        commons_name (str): Commons acronym, e.g., ccdi, icdc
         tag (str): Tag name of the data model
         val_output_bucket (str): Bucket of where validation output be uploaded to
         runner (str): Unique runner name
