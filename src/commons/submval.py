@@ -83,10 +83,7 @@ Property YAML file:
             str: A string of validation summary of a file
         """
         file_df = self.read_tsv(file_path=filepath)
-        print(file_df)
         node_type = self.get_type(file_path=filepath)
-        print(node_type)
-        print(req_prop_list)
         properties = file_df.columns
         print_str = f"\n\t{node_type}\n\t----------\n\t"
         # report if all req_prop_list properties are found in the file
@@ -102,7 +99,6 @@ Property YAML file:
         # loop through every prop in properties, and check if prop is required
         check_list = []
         for property in properties:
-            print(property)
             if property in req_prop_list:
                 proprety_dict = {}
                 proprety_dict["node"] = node_type
@@ -121,7 +117,6 @@ Property YAML file:
                 pass
 
         check_df = pd.DataFrame.from_records(check_list)
-        print(check_df)
         # wrape the text of error row if the length exceeds 25
         if check_df.shape[0] > 0:
             check_df["error row"] = check_df["error row"].str.wrap(25)
@@ -282,16 +277,16 @@ Property YAML file:
             # this means we have at least one property in this node type has
             # enum value
             for property in properties:
-                print(property)
                 # print(f"property: {property}")
                 if property in prop_df_node["Property"].tolist():
+                    print(property)
                     # property type has "enum" in it
                     property_dict = {}
                     property_dict["node"] = node_type
                     property_dict["property"] = property
                     property_type = prop_df_node.loc[
                         prop_df_node["Property"] == property, "Type"
-                    ]
+                    ].values[0]
                     print(f"property_type is {property_type}")
                     property_enum_list = prop_df_node.loc[
                         prop_df_node["Property"] == property, "Example value"
