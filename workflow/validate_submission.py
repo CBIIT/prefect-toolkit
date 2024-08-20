@@ -144,9 +144,9 @@ def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_
 
     # write prop dict to file and upload to db
     if tag == "":
-        props_dict_tag = tag
-    else:
         props_dict_tag = "master"
+    else:
+        props_dict_tag = tag
     prop_dict_df = model_obj.get_prop_dict_df()
     prop_dict_filename = f"{commons_name}_model-{props_dict_tag}_props_table.tsv"
     prop_dict_df.to_csv(prop_dict_filename, sep="\t", index=False)
