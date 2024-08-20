@@ -108,7 +108,7 @@ def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_
     """Prefect flow which validates a folder of submission tsv files against data model
 
     Args:
-        submission_loc (str): Bucket location of submission files (tsv), e.g., s3://bucket-name/folder-path
+        submission_loc (str): Bucket location of submission files (tsv). Whitespace is NOT allowed, e.g., s3://bucket-name/folder-path
         commons_name (str): Commons acronym. Acceptable options are: ccdi, icdc
         val_output_bucket (str): Bucket name of where validation output be uploaded to
         runner (str): Unique runner name without whitespace, e.g., john_smith
