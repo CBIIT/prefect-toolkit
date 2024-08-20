@@ -3,7 +3,9 @@ from src.commons.datamodel import ReadDataModel, GetDataModel
 from src.commons.utils import AwsUtils, get_date, get_time
 from prefect import get_run_logger, flow, task
 import os
+from typing import Literal
 
+_CommonTypes = Literal["ccdi","icdc"]
 
 @task(name="Validate Required Properties", log_prints=True)
 def val_required(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
@@ -104,17 +106,17 @@ def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submiss
 
 
 @flow(name="Validate Submission Files", log_prints=True)
-def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_bucket: str, runner: str, tag: str = "",exclude_node_type: list = []) -> None:
+def validate_submission_tsv(submission_loc: str, commons_name: _CommonTypes,  val_output_bucket: str, runner: str, tag: str = "",exclude_node_type: list = []) -> None:  
     """Prefect flow which validates a folder of submission tsv files against data model
 
     Args:
-        submission_loc (str): Bucket location of submission files (tsv)
-        commons_name (str): Commons acronym, e.g., ccdi, icdc
-        val_output_bucket (str): Bucket of where validation output be uploaded to
-        runner (str): Unique runner name
+        submission_loc (str): Bucket location of submission files (tsv), e.g., s3://bucket-name/folder-path
+        commons_name (_CommonTypes): Commons acronym. Acceptable options are: ccdi, icdc
+        val_output_bucket (str): Bucket name of where validation output be uploaded to
+        runner (str): Unique runner name without whitespace, e.g., john_smith
         tag (str, optional): Tag name of the data model. Defaults to "" to use master branch. 
         exclude_node_type (list, optional): List of nodes to exclude. Defaults to [].
-    """    
+    """
     logger = get_run_logger()
     # download submission file folder
     submission_bucket, submission_path = AwsUtils.parse_object_uri(uri=submission_loc)
