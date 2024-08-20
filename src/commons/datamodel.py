@@ -46,7 +46,7 @@ class GetDataModel(CommonsRepo):
         """Get tags informtion from github repo using github api
 
         Args:
-            commons_acronym (str): An acronym of commons, e.g., ccdi 
+            commons_acronym (str): An acronym of commons, e.g., ccdi
 
         Returns:
             dict: A dictionary of tags of a repo
@@ -98,19 +98,24 @@ class GetDataModel(CommonsRepo):
         if tag != "":
             tags_name = cls.get_tags_only(commons_acronym=commons_acronym)
             if tag not in tags_name:
-                raise ValueError(f"Tag {tag} not found in repo. Available tags in repo: {*tags_name,}")
+                raise ValueError(
+                    f"Tag {tag} not found in repo. Available tags in repo: {*tags_name,}"
+                )
             else:
                 pass
-            tags_list_complete =  cls.get_tags_complete(commons_acronym=commons_acronym)
+            tags_list_complete = cls.get_tags_complete(commons_acronym=commons_acronym)
             tag_item = [i for i in tags_list_complete if i["name"] == tag][0]
-            model_file_relpath = cls._get_repo_dict(commons_acronym=commons_acronym)["model_yaml"]
-            props_file_relpath = cls._get_repo_dict(commons_acronym=commons_acronym)[
-                "props_yaml"
-            ]
+
             zipurl = tag_item["zipball_url"]
         else:
             repo_dict = cls._get_repo_dict(commons_acronym=commons_acronym)
             zipurl = repo_dict["master_zipball"]
+        model_file_relpath = cls._get_repo_dict(commons_acronym=commons_acronym)[
+            "model_yaml"
+        ]
+        props_file_relpath = cls._get_repo_dict(commons_acronym=commons_acronym)[
+            "props_yaml"
+        ]
         http_response = urlopen(zipurl)
         zipfile = ZipFile(BytesIO(http_response.read()))
         # create a temp dir to download the zipfile
@@ -119,9 +124,7 @@ class GetDataModel(CommonsRepo):
         zipfile.extractall(path=tempdir)
         try:
             copy(
-                os.path.join(
-                    tempdir, os.listdir(tempdir)[0], model_file_relpath
-                ),
+                os.path.join(tempdir, os.listdir(tempdir)[0], model_file_relpath),
                 os.path.basename(model_file_relpath),
             )
             copy(
@@ -131,13 +134,18 @@ class GetDataModel(CommonsRepo):
         except FileNotFoundError as err:
             raise FileNotFoundError(f"File not found: {repr(err)}")
         except Exception as e:
-            raise FileNotFoundError(f"Error occurred downloading data model files: {repr(e)}")
-        return (os.path.basename(model_file_relpath), os.path.basename(props_file_relpath))
+            raise FileNotFoundError(
+                f"Error occurred downloading data model files: {repr(e)}"
+            )
+        return (
+            os.path.basename(model_file_relpath),
+            os.path.basename(props_file_relpath),
+        )
 
 
 class ReadDataModel:
-    """A class reads data model files
-    """    
+    """A class reads data model files"""
+
     def __init__(self, model_file: str, prop_file: str) -> None:
         self.model_file = model_file
         self.prop_file = prop_file
