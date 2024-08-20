@@ -143,15 +143,20 @@ def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_
     logger.info(f"Uploaded output {output_name} to bucket {val_output_bucket} folder path {output_folder}")
 
     # write prop dict to file and upload to db
+    if tag == "":
+        props_dict_tag = tag
+    else:
+        props_dict_tag = "master"
     prop_dict_df = model_obj.get_prop_dict_df()
-    prop_dict_df.to_csv("props_dict_table.tsv", sep="\t", index=False)
+    prop_dict_filename = f"{commons_name}_model-{props_dict_tag}_props_table.tsv"
+    prop_dict_df.to_csv(prop_dict_filename, sep="\t", index=False)
     AwsUtils.file_ul(
         bucket=val_output_bucket,
         output_folder=output_folder,
-        newfile="props_dict_table.tsv",
+        newfile=prop_dict_filename,
     )
     logger.info(
-        f"Uploaded props_dict_table.tsv to bucket {val_output_bucket} folder path {output_folder}"
+        f"Uploaded {prop_dict_filename} to bucket {val_output_bucket} folder path {output_folder}"
     )
 
     return None
