@@ -104,7 +104,7 @@ def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submiss
 
 
 @flow(name="Validate Submission Files", log_prints=True)
-def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_bucket: str, runner: str, tag: str = "",exclude_node_type: list = []) -> None:  
+def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_bucket: str, runner: str, tag: str = "",exclude_node_type: list[str] = []) -> None:  
     """Prefect flow which validates a folder of submission tsv files against data model
 
     Args:
@@ -113,7 +113,7 @@ def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_
         val_output_bucket (str): Bucket name of where validation output be uploaded to
         runner (str): Unique runner name without whitespace, e.g., john_smith
         tag (str, optional): Tag name of the data model. Defaults to "" to use master branch. 
-        exclude_node_type (list, optional): List of nodes to exclude. Defaults to [].
+        exclude_node_type (list[str], optional): List of nodes to exclude. Defaults to [].
     """
     logger = get_run_logger()
     # download submission file folder
