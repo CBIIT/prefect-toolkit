@@ -17,6 +17,7 @@ class CommonsRepo:
             "model_yaml": "model-desc/icdc-model.yml",
             "props_yaml": "model-desc/icdc-model-props.yml",
             "tags_api": "https://api.github.com/repos/CBIIT/icdc-model-tool/tags",
+            "master_zipball": "https://api.github.com/repos/CBIIT/icdc-model-tool/zipball/master",
         }
     )
     ccdi: dict = field(
@@ -25,5 +26,6 @@ class CommonsRepo:
             "model_yaml": "model-desc/ccdi-model.yml",
             "props_yaml": "model-desc/ccdi-model-props.yml",
             "tags_api": "https://api.github.com/repos/CBIIT/ccdi-model/tags",
+            "master_zipball": "https://api.github.com/repos/CBIIT/ccdi-model/zipball/master",
         }
     )

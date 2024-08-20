@@ -269,7 +269,6 @@ Property YAML file:
         prop_df_node = prop_df[
             (prop_df["Node"] == node_type) & (prop_df["Type"].str.contains("enum"))
         ][["Property", "Node", "Type", "Example value"]]
-        print(prop_df_node)
 
         print_str = f"\n\t{node_type}\n\t----------\n\t"
         check_list = []
@@ -279,7 +278,6 @@ Property YAML file:
             for property in properties:
                 # print(f"property: {property}")
                 if property in prop_df_node["Property"].tolist():
-                    print(property)
                     # property type has "enum" in it
                     property_dict = {}
                     property_dict["node"] = node_type
@@ -287,7 +285,6 @@ Property YAML file:
                     property_type = prop_df_node.loc[
                         prop_df_node["Property"] == property, "Type"
                     ].values[0]
-                    print(f"property_type is {property_type}")
                     property_enum_list = prop_df_node.loc[
                         prop_df_node["Property"] == property, "Example value"
                     ].tolist()[0]

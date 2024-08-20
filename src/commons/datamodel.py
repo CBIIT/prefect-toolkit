@@ -95,19 +95,23 @@ class GetDataModel(CommonsRepo):
         Returns:
             tuple: data model file names
         """
-        tags_name = cls.get_tags_only(commons_acronym=commons_acronym)
-        if tag not in tags_name:
-            raise ValueError(f"Tag {tag} not found in repo. Available tags in repo: {*tags_name,}")
+        if tag != "":
+            tags_name = cls.get_tags_only(commons_acronym=commons_acronym)
+            if tag not in tags_name:
+                raise ValueError(f"Tag {tag} not found in repo. Available tags in repo: {*tags_name,}")
+            else:
+                pass
+            tags_list_complete =  cls.get_tags_complete(commons_acronym=commons_acronym)
+            tag_item = [i for i in tags_list_complete if i["name"] == tag][0]
+            model_file_relpath = cls._get_repo_dict(commons_acronym=commons_acronym)["model_yaml"]
+            props_file_relpath = cls._get_repo_dict(commons_acronym=commons_acronym)[
+                "props_yaml"
+            ]
+            zipurl = tag_item["zipball_url"]
         else:
-            pass
-        tags_list_complete =  cls.get_tags_complete(commons_acronym=commons_acronym)
-        tag_item = [i for i in tags_list_complete if i["name"] == tag][0]
-        model_file_relpath = cls._get_repo_dict(commons_acronym=commons_acronym)["model_yaml"]
-        props_file_relpath = cls._get_repo_dict(commons_acronym=commons_acronym)[
-            "props_yaml"
-        ]
-        tag_zipurl = tag_item["zipball_url"]
-        http_response = urlopen(tag_zipurl)
+            repo_dict = cls._get_repo_dict(commons_acronym=commons_acronym)
+            zipurl = repo_dict["master_zipball"]
+        http_response = urlopen(zipurl)
         zipfile = ZipFile(BytesIO(http_response.read()))
         # create a temp dir to download the zipfile
         tempdirobj = tempfile.TemporaryDirectory(suffix="_github_dl")
