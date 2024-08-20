@@ -215,8 +215,18 @@ class ReadDataModel:
 
         if "Req" in prop_dict.keys():
             prop_required = prop_dict["Req"]
+            # if required value is string
+            if isinstance(prop_required, str):
+                if prop_required.lower() == "yes":
+                    prop_required = True
+                elif prop_required.lower() == "no":
+                    prop_required = False
+                else:
+                    pass
+            else:
+                pass
         else:
-            prop_required = "No"
+            prop_required = False
 
         if "Key" in prop_dict.keys():
             prop_key = prop_dict["Key"]
@@ -236,6 +246,7 @@ class ReadDataModel:
                 prop_type = "string"
             # if prop_dict["Type"] is a dict
             else:
+                # if value_type can be found under prop_dict["Type"]
                 if "value_type" not in prop_dict["Type"].keys():
                     # there is only few cases in icdc, such as document_number
                     # This is probably a poorly described property that needs to be fixed later
@@ -243,31 +254,38 @@ class ReadDataModel:
                 elif (
                     prop_dict["Type"]["value_type"] == "string"
                     and "Enum" in prop_dict["Type"].keys()
-                    and prop_dict["Strict"] == False
+                    and "Strict" in prop_dict.keys()
                 ):
-                    # this covers string;enum
-                    prop_type = "string;enum"
-
-                elif (
-                    prop_dict["Type"]["value_type"] == "string"
-                    and "Enum" in prop_dict["Type"].keys()
-                    and prop_dict["Strict"] == True
-                ):
-                    # this covers enum
-                    prop_type = "enum"
+                    if prop_dict["Strict"] == False:
+                        # this covers string;enum
+                        prop_type = "string;enum"
+                    elif prop_dict["Strict"] == True:
+                        # this covers enum
+                        prop_type = "enum"
+                # property below here all have a type starts with array
                 elif (
                     prop_dict["Type"]["value_type"] == "list"
                     and "Type" in prop_dict["Type"].keys()
                 ):
                     # this covers array[string]
                     prop_type = "array[string]"
-                elif (
-                    prop_dict["Type"]["value_type"] == "list"
-                    and "Enum" in prop_dict["Type"].keys()
-                    and "Strict" not in prop_dict.keys()
-                ):
-                    # this coveres array[enum] in ICDC, only one occurence
-                    prop_type = "array[enum]"
+                elif (prop_dict["Type"]["value_type"] == "list"
+                      and "Strict" not in prop_dict.keys()):
+                    if "Enum" in prop_dict["Type"].keys():
+                        # this coveres array[enum] in ICDC, only one occurence
+                        prop_type = "array[enum]"
+                    else:
+                        if "item_type" in prop_dict["Type"].keys():
+                            if prop_dict["Type"]["item_type"] == "string":
+                                prop_type = "array[string]"
+                            else:
+                                item_type_value = prop_dict["Type"]["item_type"]
+                                prop_type = f"array[{item_type_value}]"
+                        else:
+                            # if no Enum or item_type under prop_dict["Type"]
+                            # at least it is a list
+                            prop_type = "array[string]"
+                # below all have Strict key under prop_dict, which is ccdi specific
                 elif (
                     prop_dict["Type"]["value_type"] == "list"
                     and "Enum" in prop_dict["Type"].keys()
@@ -378,4 +396,6 @@ class ReadDataModel:
                         [prop_return_df, pd.DataFrame(prop_append_line)],
                         ignore_index=True,
                     )
+        # fix the inconsistency of Required value
+
         return prop_return_df
