@@ -1,17 +1,52 @@
 from src.commons.datamodel import ReadDataModel
 from src.commons.utils import ReadSubmTsv
+from src.commons.literals import CommonsFeat
 import numpy as np
 import pandas as pd
+from dataclasses import fields
 from typing import TypeVar
 
 DataFrame = TypeVar("DataFrame")
 
 
-class SubmVal(ReadSubmTsv):
+class SubmVal(ReadSubmTsv, CommonsFeat):
     """A class performs validation on submission tsv files"""
 
     def __init__(self, filepath_list: list[str]):
         self.filepath_list = filepath_list
+
+    @classmethod
+    def commons_feature(cls, commons_acronym: str) -> dict:
+        """Returns a dictionary of features of a commons
+
+        Args:
+            commons_acronym (str): Commons acronym
+
+        Returns:
+            dict: A dictionary of commons feature
+        """
+        commons_acronym = commons_acronym.lower()
+        available_commons = [field.name for field in fields(cls)]
+        if commons_acronym not in available_commons:
+            raise ValueError(f"Unknown commons acronym {commons_acronym} provided")
+        else:
+            pass
+        return_dict = cls.__dataclass_fields__[commons_acronym].default_factory()
+        return return_dict
+
+    @classmethod
+    def commons_delimiter(cls, commons_acronym: str) -> str:
+        """Returns the delimiter of a commons
+
+        Args:
+            commons_acronym (str): Commons acronym
+
+        Returns:
+            str: Commons delimiter
+        """
+        commons_feature_dict = cls.commons_feature(commons_acronym=commons_acronym)
+        commons_delimiter = commons_feature_dict["delimiter"]
+        return commons_delimiter
 
     @staticmethod
     def section_header(section_name: str) -> str:
@@ -251,13 +286,14 @@ Property YAML file:
         return return_str
 
     def _validate_terms_value_sets_one_file(
-        self, filepath: str, data_model: ReadDataModel
+        self, filepath: str, data_model: ReadDataModel, commons_delimiter: str
     ) -> str:
         """Returns a string of validation summary on terms and value sets for a single tsv file
 
         Args:
             filepath (str):A file path of tsv file
             data_model (ReadDataModel): An obj of ReadDataModel
+            commons_delimiter (str): Commons delimiter
 
         Returns:
             str: A string of validation summary of a file
@@ -300,9 +336,9 @@ Property YAML file:
                             # this covers array[enum], array[string;enum]
                             invalid_list = []
                             for v in unique_values:
-                                if ";" in v:
-                                    # if the value of an item has ";"
-                                    v_item_list = v.split(";")
+                                if commons_delimiter in v:
+                                    # if the value of an item has commons_delimiter, usually ";"
+                                    v_item_list = v.split(commons_delimiter)
                                     v_invalid = [
                                         i
                                         for i in v_item_list
@@ -311,7 +347,7 @@ Property YAML file:
 
                                     invalid_list.extend(v_invalid)
                                 else:
-                                    # if the value of an item doesn't have ";"
+                                    # if the value of an item doesn't have commons_delimiter, usually ";"
                                     if v not in property_enum_list:
                                         invalid_list.append(v)
                                     else:
@@ -385,11 +421,12 @@ Property YAML file:
         )
         return print_str
 
-    def validate_terms_value_sets(self, data_model: ReadDataModel) -> str:
+    def validate_terms_value_sets(self, data_model: ReadDataModel, commons_acronym: str) -> str:
         """Validate terms and value sets for a list of tsv files
 
         Args:
             data_model (ReadDataModel): An obj of ReadDataModel
+            commons_acronym (str): Common acronym
 
         Returns:
             str: A string of validation summary
@@ -400,9 +437,12 @@ Property YAML file:
             + "\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file.\nIf the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n"
         )
         validation_str = ""
+        commons_delimiter =  self.commons_delimiter(commons_acronym=commons_acronym)
         for file in self.filepath_list:
             validation_str_file = self._validate_terms_value_sets_one_file(
-                filepath=file, data_model=data_model
+                filepath=file,
+                data_model=data_model,
+                commons_delimiter=commons_delimiter,
             )
             validation_str = validation_str + validation_str_file
         return_str = section_title + validation_str

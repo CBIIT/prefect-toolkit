@@ -4,7 +4,7 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 import json
-from src.commons.constants import CommonsRepo
+from src.commons.literals import CommonsRepo
 from dataclasses import fields
 import requests
 import tempfile

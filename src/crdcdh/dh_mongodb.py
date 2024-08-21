@@ -1,6 +1,6 @@
 from pymongo import MongoClient, errors
 from typing import Union
-from src.commons.constants import CrdcDHMongoSecrets
+from src.commons.literals import CrdcDHMongoSecrets
 from src.commons.utils import get_secret
 
 

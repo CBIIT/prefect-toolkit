@@ -29,3 +29,14 @@ class CommonsRepo:
             "master_zipball": "https://api.github.com/repos/CBIIT/ccdi-model/zipball/master",
         }
     )
+
+@dataclass
+class CommonsFeat:
+    icdc: dict = field(
+        default_factory = lambda: {
+            "delimiter": ";"
+        }
+    )
+    ccdi: dict = field(default_factory=lambda: {"delimiter": ";"})
+    cds: dict = field(default_factory=lambda: {"delimiter": "|"})
+

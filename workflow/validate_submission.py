@@ -24,8 +24,8 @@ def val_numeric(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
 
 
 @task(name="Validate Terms and Value Sets", log_prints=True)
-def val_terms(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
-    validation_str = valid_object.validate_terms_value_sets(data_model=datamodel_obj)
+def val_terms(valid_object: SubmVal, datamodel_obj: ReadDataModel, commons_acronym: str) -> str:
+    validation_str = valid_object.validate_terms_value_sets(data_model=datamodel_obj, commons_acronym=commons_acronym)
     return validation_str
 
 
@@ -46,8 +46,15 @@ def download_model_files(commons_acronym: str, tag: str) -> tuple:
     data_model_yaml, props_yaml = GetDataModel.dl_model_files(commons_acronym=commons_acronym, tag=tag)
     return data_model_yaml, props_yaml
 
+
 @flow(name="Writing Validation Report", log_prints=True)
-def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submission_folder: str, output_name: str) -> None:
+def write_report(
+    valid_object: SubmVal,
+    datamodel_object: ReadDataModel,
+    submission_folder: str,
+    output_name: str,
+    commons_acronym: str,
+) -> None:
     """Prefect flow which writes validatioin report
 
     Args:
@@ -55,7 +62,8 @@ def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submiss
         datamodel_object (ReadDataModel): ReadDataModel object
         submission_folder (str): Name of the tsv folder
         output_name (str): Validation report output name
-    """    
+        commons_acronym (str): Commons acronym
+    """
     # write header
     report_header = SubmVal.report_header(
         report_path=output_name,
@@ -79,7 +87,11 @@ def write_report(valid_object: SubmVal, datamodel_object: ReadDataModel, submiss
     print("Whitespace validation finished")
 
     # validate terms and value sets
-    terms_validation = val_terms(valid_object=valid_object, datamodel_obj=datamodel_object)
+    terms_validation = val_terms(
+        valid_object=valid_object,
+        datamodel_obj=datamodel_object,
+        commons_acronym=commons_acronym,
+    )
     with open(output_name, "a+") as outf:
         outf.write(terms_validation)
     print("Terms and value sets validation finished")
@@ -134,7 +146,7 @@ def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_
 
     output_name = os.path.basename(submission_folder.strip("/")) + "_validation_report_" + get_date() + ".txt"
     logger.info("Starting validation")
-    write_report(valid_object=valid_obj, datamodel_object=model_obj, submission_folder=submission_folder, output_name=output_name)
+    write_report(valid_object=valid_obj, datamodel_object=model_obj, submission_folder=submission_folder, output_name=output_name, commons_acronym=commons_name)
     logger.info("Validation finished!")
 
     # upload output to AWS bucket
