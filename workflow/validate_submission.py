@@ -141,6 +141,7 @@ def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_
     file_list = SubmVal.select_tsv_exclude_type(
         folder_path=submission_folder, exclude_type_list=exclude_node_type
     )
+    logger.info(f"Submission tsv files found: {*file_list,}")
     valid_obj = SubmVal(filepath_list=file_list)
     model_obj = ReadDataModel(model_file = model_yaml, prop_file=props_yaml)
 
