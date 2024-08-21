@@ -3,20 +3,20 @@ from src.commons.utils import ReadSubmTsv
 from src.commons.literals import CommonsFeat
 import numpy as np
 import pandas as pd
-from dataclasses import fields
+from dataclasses import fields, dataclass
 from typing import TypeVar
 
 DataFrame = TypeVar("DataFrame")
 
 
-class SubmVal(ReadSubmTsv, CommonsFeat):
+class SubmVal(ReadSubmTsv):
     """A class performs validation on submission tsv files"""
 
     def __init__(self, filepath_list: list[str]):
         self.filepath_list = filepath_list
 
-    @classmethod
-    def commons_feature(cls, commons_acronym: str) -> dict:
+    @staticmethod
+    def commons_feature(commons_acronym: str) -> dict:
         """Returns a dictionary of features of a commons
 
         Args:
@@ -26,12 +26,12 @@ class SubmVal(ReadSubmTsv, CommonsFeat):
             dict: A dictionary of commons feature
         """
         commons_acronym = commons_acronym.lower()
-        available_commons = [field.name for field in fields(cls)]
+        available_commons = [field.name for field in fields(CommonsFeat)]
         if commons_acronym not in available_commons:
             raise ValueError(f"Unknown commons acronym {commons_acronym} provided")
         else:
             pass
-        return_dict = cls.__dataclass_fields__[commons_acronym].default_factory()
+        return_dict = CommonsFeat.__dataclass_fields__[commons_acronym].default_factory()
         return return_dict
 
     @classmethod
