@@ -116,7 +116,7 @@ def write_report(
 
 
 @flow(name="Validate Submission Files", log_prints=True)
-def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_bucket: str, runner: str, tag: str = "",exclude_node_type: list[str] = []) -> None:  
+def validate_submission_tsv(submission_loc: str, commons_name: str, val_output_bucket: str, runner: str, tag: str = "", exclude_node_type: list[str] = []) -> None:  
     """Prefect flow which validates a folder of submission tsv files against data model
 
     Args:
@@ -155,7 +155,30 @@ def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_
     AwsUtils.file_ul(bucket=val_output_bucket, output_folder=output_folder, newfile=output_name)
     logger.info(f"Uploaded output {output_name} to bucket {val_output_bucket} folder path {output_folder}")
 
-    # write prop dict to file and upload to db
+    return None
+
+@flow(name="Validate Data Model", log_prints=True)
+def validate_data_model(commons_name: str, val_output_bucket: str, runner: str, tag: str = "") -> None:
+    """Prefect flow that generates a table of data model props (tsv) which can be used for
+    submssion file validation
+
+    Args:
+        commmons_name (str): Commons acronym. Acceptable options are: ccdi, icdc
+        val_output_bucket (str): Bucket name of where the output be uploaded to
+        runner (str): Unique runner name without whitespace, e.g., john_smith
+        tag (str, optional): Tag name of the data model. Defaults to "".
+    """
+    logger = get_run_logger()
+    # download data model files
+    model_yaml, props_yaml = download_model_files(commons_acronym=commons_name, tag=tag)
+    logger.info(f"Downloaded data files: {model_yaml}, {props_yaml}")
+
+    # output folder name in bucket
+    output_folder = os.path.join(runner, "data_model_validation_" + get_time())
+    # create model object
+    model_obj = ReadDataModel(model_file=model_yaml, prop_file=props_yaml)
+
+    # write prop dict to file and upload to AWS
     if tag == "":
         props_dict_tag = "master"
     else:
@@ -171,5 +194,4 @@ def validate_submission_tsv(submission_loc: str, commons_name: str,  val_output_
     logger.info(
         f"Uploaded {prop_dict_filename} to bucket {val_output_bucket} folder path {output_folder}"
     )
-
     return None

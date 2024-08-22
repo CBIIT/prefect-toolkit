@@ -17,7 +17,7 @@ class CommonsRepo:
             "model_yaml": "model-desc/icdc-model.yml",
             "props_yaml": "model-desc/icdc-model-props.yml",
             "tags_api": "https://api.github.com/repos/CBIIT/icdc-model-tool/tags",
-            "master_zipball": "https://api.github.com/repos/CBIIT/icdc-model-tool/zipball/master",
+            "master_zipball": "https://github.com/CBIIT/icdc-model-tool/archive/refs/heads/main.zip",
         }
     )
     ccdi: dict = field(
@@ -26,7 +26,16 @@ class CommonsRepo:
             "model_yaml": "model-desc/ccdi-model.yml",
             "props_yaml": "model-desc/ccdi-model-props.yml",
             "tags_api": "https://api.github.com/repos/CBIIT/ccdi-model/tags",
-            "master_zipball": "https://api.github.com/repos/CBIIT/ccdi-model/zipball/master",
+            "master_zipball": "https://github.com/CBIIT/ccdi-model/archive/refs/heads/main.zip",
+        }
+    )
+    cds: dict = field(
+        default_factory=lambda: {
+            "repo": "https://github.com/CBIIT/cds-model",
+            "model_yaml": "model-desc/cds-model.yml",
+            "props_yaml": "model-desc/cds-model-props.yml",
+            "tags_api": "https://api.github.com/repos/CBIIT/cds-model/tags",
+            "master_zipball": "https://github.com/CBIIT/cds-model/archive/refs/heads/main.zip",
         }
     )
 
@@ -39,4 +48,3 @@ class CommonsFeat:
     )
     ccdi: dict = field(default_factory=lambda: {"delimiter": ";"})
     cds: dict = field(default_factory=lambda: {"delimiter": "|"})
-
