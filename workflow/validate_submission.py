@@ -163,7 +163,7 @@ def validate_data_model(commons_name: str, val_output_bucket: str, runner: str, 
     submssion file validation
 
     Args:
-        commons_name (str): Commons acronym. Acceptable options are: ccdi, icdc
+        commons_name (str): Commons acronym. Acceptable options are: ccdi, icdc, cds
         val_output_bucket (str): Bucket name of where the output be uploaded to
         runner (str): Unique runner name without whitespace, e.g., john_smith
         tag (str, optional): Tag name of the data model. Defaults to "".
