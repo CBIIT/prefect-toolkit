@@ -121,7 +121,7 @@ def validate_submission_tsv(submission_loc: str, commons_name: str, val_output_b
 
     Args:
         submission_loc (str): Bucket location of submission files (tsv). Whitespace is NOT allowed, e.g., s3://bucket-name/folder-path
-        commons_name (str): Commons acronym. Acceptable options are: ccdi, icdc
+        commons_name (str): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc
         val_output_bucket (str): Bucket name of where validation output be uploaded to
         runner (str): Unique runner name without whitespace, e.g., john_smith
         tag (str, optional): Tag name of the data model. Defaults to "" to use master branch. 
@@ -163,7 +163,7 @@ def validate_data_model(commons_name: str, val_output_bucket: str, runner: str, 
     submssion file validation
 
     Args:
-        commons_name (str): Commons acronym. Acceptable options are: ccdi, icdc, cds
+        commons_name (str): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc
         val_output_bucket (str): Bucket name of where the output be uploaded to
         runner (str): Unique runner name without whitespace, e.g., john_smith
         tag (str, optional): Tag name of the data model. Defaults to "" to use master branch.

@@ -38,6 +38,15 @@ class CommonsRepo:
             "master_zipball": "https://github.com/CBIIT/cds-model/archive/refs/heads/main.zip",
         }
     )
+    c3dc: dict = field(
+        default_factory=lambda: {
+            "repo": "https://github.com/CBIIT/c3dc-model",
+            "model_yaml": "model-desc/c3dc-model.yml",
+            "props_yaml": "model-desc/c3dc-model-props.yml",
+            "tags_api": "https://api.github.com/repos/CBIIT/c3dc-model/tags",
+            "master_zipball": "https://github.com/CBIIT/c3dc-model/archive/refs/heads/main.zip",
+        }
+    )
 
 @dataclass
 class CommonsFeat:
