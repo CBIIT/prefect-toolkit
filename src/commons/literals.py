@@ -57,3 +57,4 @@ class CommonsFeat:
     )
     ccdi: dict = field(default_factory=lambda: {"delimiter": ";"})
     cds: dict = field(default_factory=lambda: {"delimiter": "|"})
+    c3dc: dict = field(default_factory=lambda: {"delimiter": ";"})
