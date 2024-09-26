@@ -2,8 +2,10 @@ from src.commons.submval import SubmVal
 from src.commons.datamodel import ReadDataModel, GetDataModel
 from src.commons.utils import AwsUtils, get_date, get_time
 from prefect import get_run_logger, flow, task
+from typing import Literal
 import os
 
+DropDownChoices = Literal["ccdi", "icdc", "cds", "c3dc"]
 
 @task(name="Validate Required Properties", log_prints=True)
 def val_required(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
@@ -116,15 +118,15 @@ def write_report(
 
 
 @flow(name="Validate Submission Files", log_prints=True)
-def validate_submission_tsv(submission_loc: str, commons_name: str, val_output_bucket: str, runner: str, tag: str = "", exclude_node_type: list[str] = []) -> None:  
+def validate_submission_tsv(submission_loc: str, commons_name: DropDownChoices, val_output_bucket: str, runner: str, tag: str = "", exclude_node_type: list[str] = []) -> None:  
     """Prefect flow which validates a folder of submission tsv files against data model
 
     Args:
         submission_loc (str): Bucket location of submission files (tsv). Whitespace is NOT allowed, e.g., s3://bucket-name/folder-path
-        commons_name (str): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc
+        commons_name (DropDownChoices): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc
         val_output_bucket (str): Bucket name of where validation output be uploaded to
         runner (str): Unique runner name without whitespace, e.g., john_smith
-        tag (str, optional): Tag name of the data model. Defaults to "" to use master branch. 
+        tag (str, optional): Tag name of the data model. Defaults to "" to use master branch.
         exclude_node_type (list[str], optional): List of nodes to exclude. Defaults to [].
     """
     logger = get_run_logger()
@@ -157,13 +159,16 @@ def validate_submission_tsv(submission_loc: str, commons_name: str, val_output_b
 
     return None
 
+
 @flow(name="Validate Data Model", log_prints=True)
-def validate_data_model(commons_name: str, val_output_bucket: str, runner: str, tag: str = "") -> None:
+def validate_data_model(
+    commons_name: DropDownChoices, val_output_bucket: str, runner: str, tag: str = ""
+) -> None:
     """Prefect flow that generates a table of data model props (tsv) which can be used for
     submssion file validation
 
     Args:
-        commons_name (str): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc
+        commons_name (DropDownChoices): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc
         val_output_bucket (str): Bucket name of where the output be uploaded to
         runner (str): Unique runner name without whitespace, e.g., john_smith
         tag (str, optional): Tag name of the data model. Defaults to "" to use master branch.
