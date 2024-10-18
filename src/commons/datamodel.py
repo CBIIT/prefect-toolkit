@@ -1,9 +1,5 @@
-import yaml
-from pathlib import Path
-from typing import Dict
 import numpy as np
 import pandas as pd
-import json
 from src.commons.literals import CommonsRepo
 from dataclasses import fields
 import requests
@@ -13,6 +9,12 @@ from zipfile import ZipFile
 from io import BytesIO
 import os
 from shutil import copy
+from bento_mdf import MDF
+import bento_meta
+from bento_meta.model import Model
+from typing import TypeVar
+
+DataFrame = TypeVar("DataFrame")
 
 
 class GetDataModel(CommonsRepo):
@@ -149,26 +151,59 @@ class ReadDataModel:
     def __init__(self, model_file: str, prop_file: str) -> None:
         self.model_file = model_file
         self.prop_file = prop_file
+        self.model = self._get_model()
 
-    def _read_model(self) -> dict:
-        """reads model.yml file into dict"""
-        model_dict = yaml.safe_load(Path(self.model_file).read_text())
-        return model_dict
+    def _get_model(self) -> Model:
+        """Returns bento_meta.meta Model object from model and props file
+        Returns:
+            Model: bento_meta.meta Model object
+        """        
+        model_mdf = MDF(self.model_file, self.prop_file, handle="data_model")
+        model =  model_mdf.model
+        return model
 
-    def _read_prop(self) -> dict:
-        """reads prop.yml file into dict"""
-        prop_dict = yaml.safe_load(Path(self.prop_file).read_text())
-        return prop_dict
-
-    def get_model_nodes(self) -> Dict:
+    def get_nodes_list(self) -> list:
         """Returns a dict of node and properties of the node"""
-        model_dict = self._read_model()
-        nodes_dict = model_dict["Nodes"]
-        return nodes_dict
+        nodes = [x for x in self.model.nodes]
+        return nodes
 
-    def _read_each_prop(self, prop_dict: dict) -> tuple:
-        """Extracts multiple prop information from a prop blob in a
-        single prop dictionary
+    def get_node_props_list(self, node_name: str) -> list:
+        """Return a list of prop list of a given node
+
+        Args:
+            node_name (str): node name in data model
+
+        Returns:
+            list: a list of prop names
+        """
+        node_props = [x for x in self.model.nodes[node_name].props]
+        return node_props        
+
+    def _get_prop_cde_code(self, prop_obj) -> str:
+        """Returns CDE code of a prop"""
+        # set default value for prop_cde_code
+        prop_cde_code = np.nan
+        # test if the prop has bento_meta Concept obj
+        if isinstance(prop_obj.concept, bento_meta.objects.Concept):
+            props_term_list = prop_obj.concept.terms
+            for i in props_term_list.keys():
+                if i[1] == "caDSR":
+                    prop_cde_code = props_term_list[i].origin_id
+                else:
+                    pass
+        else:
+            pass
+        return prop_cde_code
+
+    def _read_each_prop(self, node_name: str, prop_name: str) -> tuple:
+        """Extract prop information of a given prop name in a given node
+
+        Args:
+            node_name (str): node name
+            prop_name (str): prop name
+
+        Returns:
+            tuple: a tuple of prop features/info
 
         Example prop_dict:
         {
@@ -182,7 +217,7 @@ class ReadDataModel:
             ],
             "Type": {
                 "value_type": "list",
-                "Enum": [
+                "item_type": [
                     "Hispanic or Latino",
                     "Not Allowed to Collect",
                     "Not Hispanic or Latino",
@@ -194,152 +229,69 @@ class ReadDataModel:
             "Strict": False,
             "Private": False,
         }
-        Special comments for ICDC:
-        - Req has three values, "Yes", "No", and "Preferred"
-        - "Type" is not a required key in prop_dict, if "Enum" is found
         """
-        if "Desc" in prop_dict.keys():
-            prop_description = prop_dict["Desc"]
-        else:
-            prop_description = np.nan
+        prop_obj = self.model.nodes[node_name].props[prop_name]
+        # get_attr_dict of a prop
+        prop_attr_dict = prop_obj.get_attr_dict()
+        # get description
+        prop_description = prop_attr_dict["desc"]
 
-        if "Term" in prop_dict.keys():
-            term_list = prop_dict["Term"]
-            cde_term = [i for i in term_list if i["Origin"] == "caDSR"]
-            if len(cde_term) >= 1:
-                prop_CDE = cde_term[0]["Code"]
+        # get if key
+        if prop_obj.is_key:
+            prop_if_key = prop_obj.is_key
+        elif prop_name == "id":
+            prop_if_key = False
+        else:
+            prop_if_key = np.nan
+
+        # in CCDI, every prop has a req key, which is not the case in other projects
+        prop_required = prop_obj.is_required
+
+        # get cde code
+        prop_CDE = self._get_prop_cde_code(prop_obj=prop_obj)
+
+        # extract enum list if there is a list
+        if isinstance(prop_obj.values, list):
+            prop_enum_list = prop_obj.values
+        else:
+            prop_enum_list = []
+
+        prop_value_domain = prop_attr_dict["value_domain"]
+        # prop has value_set as value_domain
+        if prop_value_domain == "value_set":
+            if prop_obj.is_strict:
+                prop_type = "enum"
             else:
-                prop_CDE = np.nan
-        else:
-            prop_CDE = np.nan
-
-        if "Req" in prop_dict.keys():
-            prop_required = prop_dict["Req"]
-            # if required value is string
-            if isinstance(prop_required, str):
-                if prop_required.lower() == "yes":
-                    prop_required = True
-                elif prop_required.lower() == "no":
-                    prop_required = False
-                else:
-                    pass
-            else:
-                pass
-        else:
-            prop_required = False
-
-        if "Key" in prop_dict.keys():
-            prop_key = prop_dict["Key"]
-        else:
-            prop_key = np.nan
-
-        # if "Type" found a key
-        if "Type" in prop_dict.keys():
-
-            if isinstance(prop_dict["Type"], str):
-                # this covers string, integar, number in CCDI
-                # this covers string, datetime, (certain)number, integer in ICDC
-                prop_type = prop_dict["Type"]
-            # if prop_dict["Type"] is a list
-            elif isinstance(prop_dict["Type"], list):
-                # this covers some unfixed icdc properties such as medication, type is a list
-                prop_type = "string"
-            # if prop_dict["Type"] is a dict
-            else:
-                # if value_type can be found under prop_dict["Type"]
-                if "value_type" not in prop_dict["Type"].keys():
-                    # there is only few cases in icdc, such as document_number
-                    # This is probably a poorly described property that needs to be fixed later
-                    prop_type = "string"
-                elif (
-                    prop_dict["Type"]["value_type"] == "string"
-                    and "Enum" in prop_dict["Type"].keys()
-                    and "Strict" in prop_dict.keys()
-                ):
-                    if prop_dict["Strict"] == False:
-                        # this covers string;enum
-                        prop_type = "string;enum"
-                    elif prop_dict["Strict"] == True:
-                        # this covers enum
-                        prop_type = "enum"
-                # property below here all have a type starts with array
-                elif (
-                    prop_dict["Type"]["value_type"] == "list"
-                    and "Type" in prop_dict["Type"].keys()
-                ):
-                    # this covers array[string]
-                    prop_type = "array[string]"
-                elif (prop_dict["Type"]["value_type"] == "list"
-                      and "Strict" not in prop_dict.keys()):
-                    if "Enum" in prop_dict["Type"].keys():
-                        # this coveres array[enum] in ICDC, only one occurence
-                        prop_type = "array[enum]"
-                    else:
-                        if "item_type" in prop_dict["Type"].keys():
-                            if prop_dict["Type"]["item_type"] == "string":
-                                prop_type = "array[string]"
-                            else:
-                                item_type_value = prop_dict["Type"]["item_type"]
-                                prop_type = f"array[{item_type_value}]"
-                        else:
-                            # if no Enum or item_type under prop_dict["Type"]
-                            # at least it is a list
-                            prop_type = "array[string]"
-                # below all have Strict key under prop_dict, which is ccdi specific
-                elif (
-                    prop_dict["Type"]["value_type"] == "list"
-                    and "Enum" in prop_dict["Type"].keys()
-                    and prop_dict["Strict"] == True
-                ):
-                    # this covers array[enum]
+                prop_type = "string;enum"
+        # prop is a list type
+        elif prop_value_domain == "list":
+            prop_item_type = prop_attr_dict["item_domain"]
+            if prop_item_type == "value_set":
+                if prop_obj.is_strict:
                     prop_type = "array[enum]"
-                elif (
-                    prop_dict["Type"]["value_type"] == "list"
-                    and "Enum" in prop_dict["Type"].keys()
-                    and prop_dict["Strict"] == False
-                ):
-                    # this covers array[string;enum]
+                else:
                     prop_type = "array[string;enum]"
-
-                elif isinstance(prop_dict["Type"]["value_type"], str):
-                    # in ICDC this covers number/integer properties that comes with unit
-                    prop_type = prop_dict["Type"]["value_type"]
-                else:
-                    print(json.dumps(prop_dict, indent=4))
-                    raise TypeError(
-                        "Can not categorize property type. Need to modify GetCCDIModel._read_each_prop method"
-                    )
-            # populate prop_example in CCDI model
-            if isinstance(prop_dict["Type"], dict):
-                if "Enum" in prop_dict["Type"].keys():
-                    prop_enum_list = prop_dict["Type"]["Enum"]
-                else:
-                    # prop_example = np.nan
-                    prop_enum_list = []
-
             else:
-                # prop_example = np.nan
-                prop_enum_list = []
-
-        elif "Enum" in prop_dict.keys():
-            # this covers enum in ICDC
-            prop_type = "enum"
-            prop_enum_list = prop_dict["Enum"]
+                prop_type = f"array[{prop_item_type}]"
+        else:
+            prop_type = prop_value_domain
         return (
             prop_description,
             prop_type,
             prop_enum_list,
             prop_required,
             prop_CDE,
-            prop_key,
+            prop_if_key,
+            
         )
 
-    def get_prop_dict_df(self):
-        """Returns a dataframe"""
-        # model_dict contains information of what properties in each node
-        model_dict = self.get_model_nodes()
-        # prop_dict contains property description, type, type, example value, and if the property is required
-        prop_dict = self._read_prop()["PropDefinitions"]
+    def get_prop_dict_df(self) -> DataFrame:
+        """Returns a dataframe of node property information of entire data model
+
+        Returns:
+            DataFrame: a dataframe
+        """        
+        node_list = self.get_nodes_list()
 
         # create a dictionary to be convereted to df later
         prop_return_df = pd.DataFrame(
@@ -355,9 +307,9 @@ class ReadDataModel:
             ]
         )
 
-        for node in model_dict.keys():
+        for node in node_list:
             # print(f"node: {node}")
-            node_property_list = model_dict[node]["Props"]
+            node_property_list = self.get_node_props_list(node_name=node)
             if node_property_list is None:
                 # this is for nodes that have no props under
                 pass
@@ -367,27 +319,18 @@ class ReadDataModel:
                     (
                         prop_description,
                         prop_type,
-                        prop_example,
+                        prop_enum_list,
                         prop_required,
                         prop_cde,
                         prop_key,
-                    ) = self._read_each_prop(prop_dict=prop_dict[property])
-
-                    """
-                    if property == node + "_id":
-                        prop_key = True
-                    elif property == "id":
-                        prop_key = False
-                    else:
-                        prop_key = np.nan
-                    """
+                    ) = self._read_each_prop(node_name=node, prop_name=property)
 
                     prop_append_line = {
                         "Property": [property],
                         "Description": [prop_description],
                         "Node": [node],
                         "Type": [prop_type],
-                        "Example value": [prop_example],
+                        "Enum List": [prop_enum_list],
                         "Required": [prop_required],
                         "Key": [prop_key],
                         "CDE": [prop_cde],
@@ -396,6 +339,4 @@ class ReadDataModel:
                         [prop_return_df, pd.DataFrame(prop_append_line)],
                         ignore_index=True,
                     )
-        # fix the inconsistency of Required value
-
         return prop_return_df
