@@ -296,7 +296,6 @@ class ReadDataModel:
             prop_required,
             prop_CDE,
             prop_if_key,
-            
         )
 
     def get_prop_dict_df(self) -> DataFrame:
