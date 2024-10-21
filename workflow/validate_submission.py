@@ -188,7 +188,7 @@ def validate_data_model(
         props_dict_tag = "master"
     else:
         props_dict_tag = tag
-    prop_dict_df = model_obj.get_prop_dict_df()
+    prop_dict_df = model_obj.props_df
     prop_dict_filename = f"{commons_name}_model-{props_dict_tag}_props_table.tsv"
     prop_dict_df.to_csv(prop_dict_filename, sep="\t", index=False)
     AwsUtils.file_ul(
