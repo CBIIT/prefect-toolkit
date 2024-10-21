@@ -315,7 +315,7 @@ class ReadDataModel:
                 "Description",
                 "Node",
                 "Type",
-                "Example value",
+                "Enum List",
                 "Required",
                 "Key",
                 "CDE",

@@ -304,7 +304,7 @@ Property YAML file:
         prop_df = data_model.props_df
         prop_df_node = prop_df[
             (prop_df["Node"] == node_type) & (prop_df["Type"].str.contains("enum"))
-        ][["Property", "Node", "Type", "Example value"]]
+        ][["Property", "Node", "Type", "Enum List"]]
 
         print_str = f"\n\t{node_type}\n\t----------\n\t"
         check_list = []
@@ -322,7 +322,7 @@ Property YAML file:
                         prop_df_node["Property"] == property, "Type"
                     ].values[0]
                     property_enum_list = prop_df_node.loc[
-                        prop_df_node["Property"] == property, "Example value"
+                        prop_df_node["Property"] == property, "Enum List"
                     ].tolist()[0]
                     unique_values = file_df[property].dropna().unique()
                     print(f"unique values in column: {*unique_values,}")
