@@ -177,7 +177,7 @@ Property YAML file:
         Returns:
             str: A string of validation summary
         """
-        prop_df = data_model.get_prop_dict_df()
+        prop_df = data_model.props_df
         section_title = (
             self.section_header(section_name="Required Properties Check")
             + "\nThis section is for required properties for all nodes that contain data.\nFor information on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, it is expected that all required information has a value:\n----------\n"
@@ -301,7 +301,7 @@ Property YAML file:
         file_df = self.read_tsv(file_path=filepath)
         properties = file_df.columns
         node_type = self.get_type(file_path=filepath)
-        prop_df = data_model.get_prop_dict_df()
+        prop_df = data_model.props_df
         prop_df_node = prop_df[
             (prop_df["Node"] == node_type) & (prop_df["Type"].str.contains("enum"))
         ][["Property", "Node", "Type", "Example value"]]
@@ -560,7 +560,7 @@ Property YAML file:
         )
 
         # extract only number and integer properties
-        prop_df = data_model.get_prop_dict_df()
+        prop_df = data_model.props_df
         prop_df_numeric = prop_df.loc[
             prop_df["Type"].isin(["integer", "number"]), ["Property", "Node", "Type"]
         ]
@@ -822,7 +822,7 @@ Property YAML file:
             + "\nThe following will check for multiples of key values, which are expected to be unique.\nIf there are any unexpected values, they will be reported below:\n----------\n"
         )
         # extract only number and integer properties
-        prop_df = data_model.get_prop_dict_df()
+        prop_df = data_model.props_df
 
         validation_str = ""
         for file in self.filepath_list:

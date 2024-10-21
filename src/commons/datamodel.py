@@ -151,7 +151,8 @@ class ReadDataModel:
     def __init__(self, model_file: str, prop_file: str) -> None:
         self.model_file = model_file
         self.prop_file = prop_file
-        self.model = self._get_model()
+        self.props_df = self.get_prop_dict_df()
+        # self.model = self._get_model()
 
     def _get_model(self) -> Model:
         """Returns bento_meta.meta Model object from model and props file
@@ -162,12 +163,12 @@ class ReadDataModel:
         model =  model_mdf.model
         return model
 
-    def get_nodes_list(self) -> list:
+    def get_nodes_list(self, model_obj) -> list:
         """Returns a dict of node and properties of the node"""
-        nodes = [x for x in self.model.nodes]
+        nodes = [x for x in model_obj.nodes]
         return nodes
 
-    def get_node_props_list(self, node_name: str) -> list:
+    def get_node_props_list(self, model_obj, node_name: str) -> list:
         """Return a list of prop list of a given node
 
         Args:
@@ -176,7 +177,7 @@ class ReadDataModel:
         Returns:
             list: a list of prop names
         """
-        node_props = [x for x in self.model.nodes[node_name].props]
+        node_props = [x for x in model_obj.nodes[node_name].props]
         return node_props        
 
     def _get_prop_cde_code(self, prop_obj) -> str:
@@ -195,7 +196,7 @@ class ReadDataModel:
             pass
         return prop_cde_code
 
-    def _read_each_prop(self, node_name: str, prop_name: str) -> tuple:
+    def _read_each_prop(self, model_obj, node_name: str, prop_name: str) -> tuple:
         """Extract prop information of a given prop name in a given node
 
         Args:
@@ -230,7 +231,7 @@ class ReadDataModel:
             "Private": False,
         }
         """
-        prop_obj = self.model.nodes[node_name].props[prop_name]
+        prop_obj = model_obj.nodes[node_name].props[prop_name]
         # get_attr_dict of a prop
         prop_attr_dict = prop_obj.get_attr_dict()
         # get description
@@ -304,7 +305,8 @@ class ReadDataModel:
         Returns:
             DataFrame: a dataframe
         """        
-        node_list = self.get_nodes_list()
+        model_obj = self._get_model()
+        node_list = self.get_nodes_list(model_obj=model_obj)
 
         # create a dictionary to be convereted to df later
         prop_return_df = pd.DataFrame(
@@ -322,7 +324,7 @@ class ReadDataModel:
 
         for node in node_list:
             # print(f"node: {node}")
-            node_property_list = self.get_node_props_list(node_name=node)
+            node_property_list = self.get_node_props_list(model_obj=model_obj, node_name=node)
             if node_property_list is None:
                 # this is for nodes that have no props under
                 pass
@@ -336,7 +338,7 @@ class ReadDataModel:
                         prop_required,
                         prop_cde,
                         prop_key,
-                    ) = self._read_each_prop(node_name=node, prop_name=property)
+                    ) = self._read_each_prop(model_obj=model_obj, node_name=node, prop_name=property)
 
                     prop_append_line = {
                         "Property": [property],
