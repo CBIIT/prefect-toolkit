@@ -234,7 +234,10 @@ class ReadDataModel:
         # get_attr_dict of a prop
         prop_attr_dict = prop_obj.get_attr_dict()
         # get description
-        prop_description = prop_attr_dict["desc"]
+        if "desc" in prop_attr_dict.keys():
+            prop_description = prop_attr_dict["desc"]
+        else:
+            prop_description = ""
 
         # get if key
         if prop_obj.is_key:
