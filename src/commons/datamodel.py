@@ -248,7 +248,7 @@ class ReadDataModel:
         else:
             prop_if_key = np.nan
 
-        # if required
+        # if required, if Yes, No, Preferred found, only Yes is recognized as True
         prop_required = prop_obj.is_required
         if isinstance(prop_required, bool):
             if prop_required == False:
