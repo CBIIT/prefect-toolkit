@@ -240,6 +240,7 @@ class ReadDataModel:
             prop_description = ""
 
         # get if key
+        # in CCDI, every prop has a req key, which is not the case in other projects
         if prop_obj.is_key:
             prop_if_key = prop_obj.is_key
         elif prop_name == "id":
@@ -247,8 +248,18 @@ class ReadDataModel:
         else:
             prop_if_key = np.nan
 
-        # in CCDI, every prop has a req key, which is not the case in other projects
+        # if required
         prop_required = prop_obj.is_required
+        if isinstance(prop_required, bool):
+            if prop_required == False:
+                prop_required = np.nan
+            else:
+                pass
+        else:
+            if prop_required == "Yes":
+                prop_required = True
+            else:
+                prop_required = np.nan
 
         # get cde code
         prop_CDE = self._get_prop_cde_code(prop_obj=prop_obj)
