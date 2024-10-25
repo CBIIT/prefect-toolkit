@@ -116,9 +116,9 @@ def write_report(
         key_validation = val_keyid(valid_object=valid_object, datamodel_obj=datamodel_object)
         with open(output_name, "a+") as outf:
             outf.write(key_validation)
+        print("Unique key id validation finished")
     else:
         pass
-    print("Unique key id validation finished")
 
 
 @flow(name="Validate Submission Files", log_prints=True)
