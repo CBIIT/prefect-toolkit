@@ -56,6 +56,7 @@ def write_report(
     submission_folder: str,
     output_name: str,
     commons_acronym: str,
+    skip_uniq_key: bool,
 ) -> None:
     """Prefect flow which writes validatioin report
 
@@ -111,14 +112,17 @@ def write_report(
     print("Crosslink validation finished")
 
     # validate key id
-    key_validation = val_keyid(valid_object=valid_object, datamodel_obj=datamodel_object)
-    with open(output_name, "a+") as outf:
-        outf.write(key_validation)
+    if not skip_uniq_key:
+        key_validation = val_keyid(valid_object=valid_object, datamodel_obj=datamodel_object)
+        with open(output_name, "a+") as outf:
+            outf.write(key_validation)
+    else:
+        pass
     print("Unique key id validation finished")
 
 
 @flow(name="Validate Submission Files", log_prints=True)
-def validate_submission_tsv(submission_loc: str, commons_name: DropDownChoices, val_output_bucket: str, runner: str, tag: str = "", exclude_node_type: list[str] = []) -> None:  
+def validate_submission_tsv(submission_loc: str, commons_name: DropDownChoices, val_output_bucket: str, runner: str, tag: str = "", exclude_node_type: list[str] = [], skip_uniq_key_val: bool = False) -> None:  
     """Prefect flow which validates a folder of submission tsv files against data model
 
     Args:
@@ -128,6 +132,7 @@ def validate_submission_tsv(submission_loc: str, commons_name: DropDownChoices, 
         runner (str): Unique runner name without whitespace, e.g., john_smith
         tag (str, optional): Tag name of the data model. Defaults to "" to use master branch.
         exclude_node_type (list[str], optional): List of nodes to exclude. Defaults to [].
+        skip_uniq_key_val (bool, optional): If skip unique key property validation. Defaults to False.
     """
     logger = get_run_logger()
     # download submission file folder
@@ -149,7 +154,7 @@ def validate_submission_tsv(submission_loc: str, commons_name: DropDownChoices, 
 
     output_name = os.path.basename(submission_folder.strip("/")) + "_validation_report_" + get_date() + ".txt"
     logger.info("Starting validation")
-    write_report(valid_object=valid_obj, datamodel_object=model_obj, submission_folder=submission_folder, output_name=output_name, commons_acronym=commons_name)
+    write_report(valid_object=valid_obj, datamodel_object=model_obj, submission_folder=submission_folder, output_name=output_name, commons_acronym=commons_name, skip_uniq_key=skip_uniq_key_val)
     logger.info("Validation finished!")
 
     # upload output to AWS bucket
