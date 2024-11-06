@@ -74,7 +74,7 @@ class SubmVal(ReadSubmTsv):
 
     @staticmethod
     def report_header(
-        report_path: str, tsv_folder_path: str, model_file: str, prop_file: str
+        report_path: str, tsv_folder_path: str, model_file: str, prop_file: str, tag: str
     ) -> str:
         """Returns a string that can render report header
 
@@ -83,6 +83,7 @@ class SubmVal(ReadSubmTsv):
             tsv_folder_path (str): folder path of tsv files
             model_file (str): data model yml file
             prop_file (str): data model property yml file
+            tag (str): model tag
 
         Returns:
             str: A string
@@ -97,9 +98,11 @@ Validation report filename:
         - {report_path}
 Submission file folder for validation: 
         - {tsv_folder_path}
+Model tag:
+        - {tag}
 Model YAML file: 
         - {model_file}
-Property YAML file: 
+Model property YAML file: 
         - {prop_file}
 
 """
@@ -312,7 +315,7 @@ Property YAML file:
             # this means we have at least one property in this node type has
             # enum value
             for property in properties:
-                print(f"property: {property}")
+                # print(f"property: {property}")
                 if property in prop_df_node["Property"].tolist():
                     # property type has "enum" in it
                     property_dict = {}
@@ -325,8 +328,8 @@ Property YAML file:
                         prop_df_node["Property"] == property, "Enum List"
                     ].tolist()[0]
                     unique_values = file_df[property].dropna().unique()
-                    print(f"unique values in column: {*unique_values,}")
-                    print(f"allowed enum list: {*property_enum_list,}")
+                    # print(f"unique values in column: {*unique_values,}")
+                    # print(f"allowed enum list: {*property_enum_list,}")
                     if len(unique_values) == 0:
                         # this property col is empty
                         property_dict["check"] = "empty"
@@ -376,7 +379,7 @@ Property YAML file:
                             # this covers enum, stirng;enum
                             invalid_list = []
                             for v in unique_values:
-                                print(v)
+                                # print(v)
                                 if v not in property_enum_list:
                                     invalid_list.append(v)
                                 else:
