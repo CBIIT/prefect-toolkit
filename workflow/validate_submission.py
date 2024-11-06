@@ -57,6 +57,7 @@ def write_report(
     output_name: str,
     commons_acronym: str,
     skip_uniq_key: bool,
+    tag: str
 ) -> None:
     """Prefect flow which writes validatioin report
 
@@ -66,13 +67,15 @@ def write_report(
         submission_folder (str): Name of the tsv folder
         output_name (str): Validation report output name
         commons_acronym (str): Commons acronym
+        tag (str): data model tag
     """
     # write header
     report_header = SubmVal.report_header(
         report_path=output_name,
         tsv_folder_path=submission_folder,
         model_file=datamodel_object.model_file,
-        prop_file=datamodel_object.prop_file
+        prop_file=datamodel_object.prop_file,
+        tag=tag
     )
     with open(output_name, "a+") as outf:
         outf.write(report_header)
@@ -154,6 +157,11 @@ def validate_submission_tsv(submission_loc: str, commons_name: DropDownChoices, 
 
     output_name = os.path.basename(submission_folder.strip("/")) + "_validation_report_" + get_date() + ".txt"
     logger.info("Starting validation")
+    # if tag not provide, main branch data model files were use, change tag value to main branch
+    if tag == "":
+        tag="main branch"
+    else:
+        pass
     write_report(valid_object=valid_obj, datamodel_object=model_obj, submission_folder=submission_folder, output_name=output_name, commons_acronym=commons_name, skip_uniq_key=skip_uniq_key_val)
     logger.info("Validation finished!")
 

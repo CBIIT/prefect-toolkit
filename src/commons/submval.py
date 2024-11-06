@@ -74,7 +74,7 @@ class SubmVal(ReadSubmTsv):
 
     @staticmethod
     def report_header(
-        report_path: str, tsv_folder_path: str, model_file: str, prop_file: str
+        report_path: str, tsv_folder_path: str, model_file: str, prop_file: str, tag: str
     ) -> str:
         """Returns a string that can render report header
 
@@ -83,6 +83,7 @@ class SubmVal(ReadSubmTsv):
             tsv_folder_path (str): folder path of tsv files
             model_file (str): data model yml file
             prop_file (str): data model property yml file
+            tag (str): model tag
 
         Returns:
             str: A string
@@ -97,9 +98,11 @@ Validation report filename:
         - {report_path}
 Submission file folder for validation: 
         - {tsv_folder_path}
+Model tag:
+        - {tag}
 Model YAML file: 
         - {model_file}
-Property YAML file: 
+Model property YAML file: 
         - {prop_file}
 
 """
