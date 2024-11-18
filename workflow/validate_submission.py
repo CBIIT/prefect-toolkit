@@ -7,9 +7,10 @@ import os
 
 DropDownChoices = Literal["ccdi", "icdc", "cds", "c3dc"]
 
+
 @task(name="Validate Required Properties", log_prints=True)
 def val_required(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
-    validation_str =  valid_object.validate_required_properties(data_model=datamodel_obj)
+    validation_str = valid_object.validate_required_properties(data_model=datamodel_obj)
     return validation_str
 
 
@@ -26,8 +27,12 @@ def val_numeric(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
 
 
 @task(name="Validate Terms and Value Sets", log_prints=True)
-def val_terms(valid_object: SubmVal, datamodel_obj: ReadDataModel, commons_acronym: str) -> str:
-    validation_str = valid_object.validate_terms_value_sets(data_model=datamodel_obj, commons_acronym=commons_acronym)
+def val_terms(
+    valid_object: SubmVal, datamodel_obj: ReadDataModel, commons_acronym: str
+) -> str:
+    validation_str = valid_object.validate_terms_value_sets(
+        data_model=datamodel_obj, commons_acronym=commons_acronym
+    )
     return validation_str
 
 
@@ -45,7 +50,9 @@ def val_keyid(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
 
 @task(name="Extract Model Files", log_prints=True)
 def download_model_files(commons_acronym: str, tag: str) -> tuple:
-    data_model_yaml, props_yaml = GetDataModel.dl_model_files(commons_acronym=commons_acronym, tag=tag)
+    data_model_yaml, props_yaml = GetDataModel.dl_model_files(
+        commons_acronym=commons_acronym, tag=tag
+    )
     return data_model_yaml, props_yaml
 
 
@@ -57,7 +64,7 @@ def write_report(
     output_name: str,
     commons_acronym: str,
     skip_uniq_key: bool,
-    tag: str
+    tag: str,
 ) -> None:
     """Prefect flow which writes validatioin report
 
@@ -75,13 +82,15 @@ def write_report(
         tsv_folder_path=submission_folder,
         model_file=datamodel_object.model_file,
         prop_file=datamodel_object.prop_file,
-        tag=tag
+        tag=tag,
     )
     with open(output_name, "a+") as outf:
         outf.write(report_header)
 
     # validate required property
-    rq_prop_validation = val_required(valid_object=valid_object, datamodel_obj=datamodel_object)
+    rq_prop_validation = val_required(
+        valid_object=valid_object, datamodel_obj=datamodel_object
+    )
     with open(output_name, "a+") as outf:
         outf.write(rq_prop_validation)
     print("Required properties validation finished")
@@ -103,7 +112,9 @@ def write_report(
     print("Terms and value sets validation finished")
 
     # validate numeric and integer properties
-    numeric_validation = val_numeric(valid_object=valid_object, datamodel_obj=datamodel_object)
+    numeric_validation = val_numeric(
+        valid_object=valid_object, datamodel_obj=datamodel_object
+    )
     with open(output_name, "a+") as outf:
         outf.write(numeric_validation)
     print("Numeric and integer properties validation finished")
@@ -116,7 +127,9 @@ def write_report(
 
     # validate key id
     if not skip_uniq_key:
-        key_validation = val_keyid(valid_object=valid_object, datamodel_obj=datamodel_object)
+        key_validation = val_keyid(
+            valid_object=valid_object, datamodel_obj=datamodel_object
+        )
         with open(output_name, "a+") as outf:
             outf.write(key_validation)
         print("Unique key id validation finished")
@@ -125,7 +138,15 @@ def write_report(
 
 
 @flow(name="Validate Submission Files", log_prints=True)
-def validate_submission_tsv(submission_loc: str, commons_name: DropDownChoices, val_output_bucket: str, runner: str, tag: str = "", exclude_node_type: list[str] = [], skip_uniq_key_val: bool = False) -> None:  
+def validate_submission_tsv(
+    submission_loc: str,
+    commons_name: DropDownChoices,
+    val_output_bucket: str,
+    runner: str,
+    tag: str = "",
+    exclude_node_type: list[str] = [],
+    skip_uniq_key_val: bool = False,
+) -> None:
     """Prefect flow which validates a folder of submission tsv files against data model
 
     Args:
@@ -140,8 +161,12 @@ def validate_submission_tsv(submission_loc: str, commons_name: DropDownChoices, 
     logger = get_run_logger()
     # download submission file folder
     submission_bucket, submission_path = AwsUtils.parse_object_uri(uri=submission_loc)
-    submission_folder = AwsUtils.folder_dl(bucket=submission_bucket, remote_folder_path=submission_path)
-    logger.info(f"Downloaded submission files from bucket {submission_bucket} folder {submission_path}")
+    submission_folder = AwsUtils.folder_dl(
+        bucket=submission_bucket, remote_folder_path=submission_path
+    )
+    logger.info(
+        f"Downloaded submission files from bucket {submission_bucket} folder {submission_path}"
+    )
 
     # download data model files
     model_yaml, props_yaml = download_model_files(commons_acronym=commons_name, tag=tag)
@@ -153,22 +178,39 @@ def validate_submission_tsv(submission_loc: str, commons_name: DropDownChoices, 
     )
     logger.info(f"Submission tsv files found: {*file_list,}")
     valid_obj = SubmVal(filepath_list=file_list)
-    model_obj = ReadDataModel(model_file = model_yaml, prop_file=props_yaml)
+    model_obj = ReadDataModel(model_file=model_yaml, prop_file=props_yaml)
 
-    output_name = os.path.basename(submission_folder.strip("/")) + "_validation_report_" + get_date() + ".txt"
+    output_name = (
+        os.path.basename(submission_folder.strip("/"))
+        + "_validation_report_"
+        + get_date()
+        + ".txt"
+    )
     logger.info("Starting validation")
     # if tag not provide, main branch data model files were use, change tag value to main branch
     if tag == "":
-        tag="main branch"
+        tag = "main branch"
     else:
         pass
-    write_report(valid_object=valid_obj, datamodel_object=model_obj, submission_folder=submission_folder, output_name=output_name, commons_acronym=commons_name, skip_uniq_key=skip_uniq_key_val)
+    write_report(
+        valid_object=valid_obj,
+        datamodel_object=model_obj,
+        submission_folder=submission_folder,
+        output_name=output_name,
+        commons_acronym=commons_name,
+        skip_uniq_key=skip_uniq_key_val,
+        tag=tag,
+    )
     logger.info("Validation finished!")
 
     # upload output to AWS bucket
     output_folder = os.path.join(runner, "submission_validation_" + get_time())
-    AwsUtils.file_ul(bucket=val_output_bucket, output_folder=output_folder, newfile=output_name)
-    logger.info(f"Uploaded output {output_name} to bucket {val_output_bucket} folder path {output_folder}")
+    AwsUtils.file_ul(
+        bucket=val_output_bucket, output_folder=output_folder, newfile=output_name
+    )
+    logger.info(
+        f"Uploaded output {output_name} to bucket {val_output_bucket} folder path {output_folder}"
+    )
 
     return None
 
