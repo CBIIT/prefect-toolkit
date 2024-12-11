@@ -4,7 +4,8 @@ from src.commons.literals import CommonsFeat
 import numpy as np
 import pandas as pd
 from dataclasses import fields, dataclass
-from typing import TypeVar
+from typing import TypeVar, Optional
+import os
 
 DataFrame = TypeVar("DataFrame")
 
@@ -108,6 +109,109 @@ Model property YAML file:
 """
         return report_header
 
+    def _validate_format_one_file(self, filepath: str) -> str:
+        """Returns a string of validation summary on the format validation for a single tsv file
+        We expect the file is in tab delimited format.
+            - Header of the file (column name) shouldn't contain any empty column name or column name with only whitespace
+            - Header of the file (column name) should contain "type"
+            - There shouldn't be any empty row in the file
+            - The number of columns in row should match with the header column number
+
+        Args:
+            filepath (str): A file path of a tsv file
+
+        Returns:
+            str: A string a validation summary of a file
+        """    
+        filename = os.path.basename(filepath)    
+        with open(filepath, "r") as file:
+            lines =  file.readlines()
+
+        print_str = f"\n\t{filename}\n\t----------\n\t"
+        linenumber = 1
+        for line in lines:
+            line = line.strip("\n")
+            # check first row (header)
+            if linenumber == 1:
+                column_names = line.split("\t")
+                column_number = len(column_names)
+                print_str = print_str + f"INFO: {column_number} column names found in the first row/header"
+                # try to identify if any empty column names
+                if "" in column_names:
+                    empty_column_pos = [
+                        i + 1 for i, x in enumerate(column_names) if x == ""
+                    ]
+                    print_str = print_str + f"ERROR: Empty column names found at column {*empty_column_pos,}\n\t"
+                else:
+                    pass
+                # try to identify any whitespace column names
+                if any([i.isspace() for i in column_names]):
+                    space_column_bool = [i.isspace() for i in column_names]
+                    space_column_pos = [i+1 for i, x in enumerate(space_column_bool) if x]
+                    print_str = (
+                        print_str
+                        + f"ERROR: Whitespace column names found at {*space_column_pos,}\n\t"
+                    )
+                else:
+                    pass
+                # try to check if type column is among headers
+                if "type" not in column_names:
+                    print_str = (
+                        print_str
+                        + "ERROR: \"type\" column name not found in the first row (header)\n\t"
+                    )
+                else:
+                    pass
+                linenumber += 1
+            # start checking second row and after
+            else:
+                row_cols = line.split("\t")
+                num_cols_found = len(row_cols)
+                if num_cols_found != column_number:
+                    print_str = (
+                        print_str
+                        + f"ERROR: Row {linenumber} has {num_cols_found} columns while header only contains {column_number} columns\n\t"
+                    )
+                elif all([i=="" for i in row_cols]):
+                    print_str = (
+                        print_str
+                        + f"ERROR: Row {linenumber} is found empty\n\t"
+                    )
+                else:
+                    pass
+                linenumber += 1
+        return print_str
+
+    def validate_format(self, filepath_list: Optional[list[str]] = None) -> str:
+        """Validate format of a list of files
+
+        Args:
+            filepath_list (Optional[list[str]], optional): A list of file path. If not provided, validation will validate with filepath_list. Defaults to None.
+
+        Returns:
+            str: A string of validation summary
+        """
+        if filepath_list is None:
+            filepath_list =  self.filepath_list
+        else:
+            pass
+        section_title = (
+            self.section_header(section_name="File Format(tsv) Check")
+            + "\nThis section is for checking basic file format requirement for each file\nFor each file, it is expected that all rows are having the equal amount of columns as header, and \"type\" column is required in the header\nIf any ERROR is found in file, the file won't be subject to further validation:\n----------\n"
+        )
+        validation_str = ""
+        failed_filelist = []
+        for file in filepath_list:
+            file_format_validation = self._validate_format_one_file(filepath=file)
+            if "ERROR" in file_format_validation:
+                failed_filelist.append(file)
+            else:
+                pass
+            validation_str = validation_str + file_format_validation
+        passed_filelist = [i for i in filepath_list if i not in failed_filelist]
+        return_str = section_title + validation_str
+        return return_str, passed_filelist
+
     def _validate_required_properties_one_file(
         self, filepath: str, req_prop_list: list[str]
     ) -> str:
@@ -170,7 +274,9 @@ Model property YAML file:
         )
         return print_str
 
-    def validate_required_properties(self, data_model: ReadDataModel) -> str:
+    def validate_required_properties(
+        self, data_model: ReadDataModel, filepath_list: Optional[list[str]] = None
+    ) -> str:
         """Validates required properties for a list of tsv files
 
         Args:
@@ -186,7 +292,11 @@ Model property YAML file:
             + "\nThis section is for required properties for all nodes that contain data.\nFor information on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, it is expected that all required information has a value:\n----------\n"
         )
         validation_str = ""
-        for file in self.filepath_list:
+        if filepath_list is None:
+            filepath_list = self.filepath_list
+        else:
+            pass
+        for file in filepath_list:
             file_type = self.get_type(file_path=file)
 
             # CCDI uses True/False in req field, while icdc uses Yes/No/Preferred in req field
@@ -268,7 +378,9 @@ Model property YAML file:
         )
         return print_str
 
-    def validate_whitespace_issue(self) -> str:
+    def validate_whitespace_issue(
+        self, filepath_list: Optional[list[str]] = None
+    ) -> str:
         """Validate whitespace issue for a list of tsv files
 
         Returns:
@@ -280,7 +392,11 @@ Model property YAML file:
             + "\nThis section checks for white space issues in all nonempty properties.\n----------\n"
         )
         validation_str = ""
-        for file in self.filepath_list:
+        if filepath_list is None:
+            filepath_list = self.filepath_list
+        else:
+            pass
+        for file in filepath_list:
             validation_str_file = self._validate_whitespace_issue_one_file(
                 filepath=file
             )
@@ -427,7 +543,12 @@ Model property YAML file:
         )
         return print_str
 
-    def validate_terms_value_sets(self, data_model: ReadDataModel, commons_acronym: str) -> str:
+    def validate_terms_value_sets(
+        self,
+        data_model: ReadDataModel,
+        commons_acronym: str,
+        filepath_list: Optional[list[str]] = None,
+    ) -> str:
         """Validate terms and value sets for a list of tsv files
 
         Args:
@@ -444,7 +565,11 @@ Model property YAML file:
         )
         validation_str = ""
         commons_delimiter =  self.commons_delimiter(commons_acronym=commons_acronym)
-        for file in self.filepath_list:
+        if filepath_list is None:
+            filepath_list = self.filepath_list
+        else:
+            pass
+        for file in filepath_list:
             validation_str_file = self._validate_terms_value_sets_one_file(
                 filepath=file,
                 data_model=data_model,
@@ -550,7 +675,9 @@ Model property YAML file:
         )
         return print_str
 
-    def validate_numeric_integer(self, data_model: ReadDataModel) -> str:
+    def validate_numeric_integer(
+        self, data_model: ReadDataModel, filepath_list: Optional[list[str]] = None
+    ) -> str:
         """Validates integer and numeric properties for a list of tsv files
 
         Args:
@@ -573,7 +700,11 @@ Model property YAML file:
         del prop_df
 
         validation_str = ""
-        for file in self.filepath_list:
+        if filepath_list is None:
+            filepath_list = self.filepath_list
+        else:
+            pass
+        for file in filepath_list:
             file_type = self.get_type(file_path=file)
             file_numeric_df = prop_df_numeric.loc[
                 prop_df_numeric["Node"] == file_type, ["Property", "Type"]
@@ -693,8 +824,12 @@ Model property YAML file:
                         property_dict["check"] = "PASS"
                         property_dict["error value"] = ""
                 else:
+                    # I won't be able to gaurantee that types can acquired from all provided file list
+                    # because if the parent type can be found in the type_mapping_dict
+                    # then parent type file was either not provided or the file didn't pass format validation
+                    # so it was removed
                     property_dict["check"] = (
-                        f"ERROR:\nFile for [{parent_type}] not found"
+                        f"ERROR:\nFile for [{parent_type}] not provided or \ndidn't pass format validation"
                     )
                     property_dict["error value"] = ""
             else:
@@ -718,7 +853,7 @@ Model property YAML file:
         )
         return print_str
 
-    def validate_cross_links(self) -> str:
+    def validate_cross_links(self, filepath_list: Optional[list[str]] = None) -> str:
         """Validates cross links for a list of tsv files
 
         Returns:
@@ -729,9 +864,14 @@ Model property YAML file:
             + self.section_header(section_name="Cross Links Check")
             + "\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------\n"
         )
-        type_mapping_dict = self.file_type_mapping(filepath_list=self.filepath_list)
+        if filepath_list is None:
+            filepath_list = self.filepath_list
+        else:
+            pass
+        type_mapping_dict = self.file_type_mapping(filepath_list=filepath_list)
         validation_str = ""
-        for file in self.filepath_list:
+        
+        for file in filepath_list:
             file_validation_str = self._validate_cross_links_one_file(
                 filepath=file, type_mapping_dict=type_mapping_dict
             )
@@ -740,7 +880,7 @@ Model property YAML file:
         return return_str
 
     def _validate_unique_key_id_one_file(
-        self, filepath: str, node_key_df: DataFrame
+        self, filepath: str, node_key_df: DataFrame, 
     ) -> str:
         """Validate key id in a file that has key property
 
@@ -813,7 +953,9 @@ Model property YAML file:
             )
         return print_str
 
-    def validate_unique_key_id(self, data_model: ReadDataModel) -> str:
+    def validate_unique_key_id(
+        self, data_model: ReadDataModel, filepath_list: Optional[list[str]] = None
+    ) -> str:
         """Validates unique key id for a list of tsv files
 
         Args:
@@ -831,7 +973,11 @@ Model property YAML file:
         prop_df = data_model.props_df
 
         validation_str = ""
-        for file in self.filepath_list:
+        if filepath_list is None:
+            filepath_list = self.filepath_list
+        else:
+            pass
+        for file in filepath_list:
             file_type = self.get_type(file_path=file)
             file_prop_df = prop_df.loc[
                 prop_df["Node"] == file_type, ["Property", "Node", "Key"]

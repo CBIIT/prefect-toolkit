@@ -145,9 +145,12 @@ class ReadSubmTsv:
         Returns:
             str: Type value of a tsv file
         """
-        
+
         tsv_df = cls.read_tsv(file_path=file_path)
-        type_uniq = tsv_df["type"].unique()
+        if "type" in tsv_df.columns:
+            type_uniq = tsv_df["type"].unique()
+        else:
+            raise ValueError(f"Can't find type column in the file {file_path}")
         if len(type_uniq) > 1:
             raise ValueError(
                 f"More than one type value were found in file {file_path}: {*type_uniq,}"
