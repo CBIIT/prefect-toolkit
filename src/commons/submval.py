@@ -135,7 +135,7 @@ Model property YAML file:
             if linenumber == 1:
                 column_names = line.split("\t")
                 column_number = len(column_names)
-                print_str = print_str + f"INFO: {column_number} column names found in the first row/header"
+                print_str = print_str + f"INFO: {column_number} column names found in the first row/header\n\t"
                 # try to identify if any empty column names
                 if "" in column_names:
                     empty_column_pos = [
@@ -180,6 +180,7 @@ Model property YAML file:
                 else:
                     pass
                 linenumber += 1
+        print_str = print_str + "\n"
         return print_str
 
     def validate_format(self, filepath_list: Optional[list[str]] = None) -> str:
