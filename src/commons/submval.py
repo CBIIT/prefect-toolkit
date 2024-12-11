@@ -198,7 +198,7 @@ Model property YAML file:
             pass
         section_title = (
             self.section_header(section_name="File Format(tsv) Check")
-            + "\nThis section is for checking basic file format requirement for each file\nFor each file, it is expected that all rows are having the equal amount of columns as header, and \"type\" column is required in the header\nIf any ERROR is found in file, the file won't be subject to further validation:\n----------\n"
+            + "\nThis section is for checking basic file format requirement for each file\nFor each file, it is expected that all rows are having the equal amount of columns as header, and \"type\" column is required in the header\nATTENTION: If any ERROR is found in file, the file won't be subject to further validation:\n----------\n"
         )
         validation_str = ""
         failed_filelist = []
