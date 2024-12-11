@@ -97,6 +97,7 @@ def write_report(
     format_validation, passed_files = val_format(valid_object=valid_object)
     with open(output_name, "a+") as outf:
         outf.write(format_validation)
+    print(f"Files that passed format validation: {*passed_files,}")
     print("Submission file format validation finished")
 
     # validate required property
