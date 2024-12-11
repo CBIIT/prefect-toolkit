@@ -210,7 +210,7 @@ Model property YAML file:
                 pass
             validation_str = validation_str + file_format_validation
         passed_filelist = [i for i in filepath_list if i not in failed_filelist]
-        return_str = section_title + validation_str
+        return_str = section_title + validation_str + "\n"
         return return_str, passed_filelist
 
     def _validate_required_properties_one_file(
