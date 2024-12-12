@@ -11,8 +11,13 @@ from src.commons.submval import SubmVal
 from src.commons.datamodel import ReadDataModel
 
 
-test_file_list = [os.path.join("tests/test_files", i) for i in os.listdir("tests/test_files") if "node" in i]
+test_file_list = [os.path.join("tests/test_files", i) for i in os.listdir("tests/test_files") if "node.tsv" in i]
 model_files =  [os.path.join("tests/test_files", i) for i in os.listdir("tests/test_files") if "yml" in i]
+test_malformed_file_list = [
+    os.path.join("tests/test_files", i)
+    for i in os.listdir("tests/test_files")
+    if "node" in i
+]
 
 @pytest.fixture
 def my_datamodel():
@@ -23,6 +28,10 @@ def my_datamodel():
 @pytest.fixture
 def my_submval():
     return SubmVal(filepath_list=test_file_list)
+
+@pytest.fixture
+def my_malformed_submval():
+    return SubmVal(filepath_list=test_malformed_file_list)
 
 def test_section_head():
     """test of static method section_header"""
@@ -74,6 +83,16 @@ def test_validate_numeric_integer(my_submval, my_datamodel):
 def test_validate_cross_links(my_submval):
     """test for cross links validation"""
     validate_str = my_submval.validate_cross_links()
-    print(validate_str)
     assert "test wrong participant" in validate_str
     assert validate_str.count("ERROR") == 3
+
+
+def test_validate_format(my_malformed_submval):
+    """test for file format validation
+    Malformed file is test-publication_node_malformed.tsv
+    """
+    validation_str, passed_file_list = my_malformed_submval.validate_format()
+    assert "INFO" in validation_str
+    assert "ERROR: Empty column names" in validation_str
+    assert "ERROR: Whitespace column names" in validation_str
+    assert "tests/test_files/test-publication_node_malformed.tsv" not in passed_file_list

@@ -8,43 +8,49 @@ import os
 DropDownChoices = Literal["ccdi", "icdc", "cds", "c3dc"]
 
 
+@task(name="Validate File Format", log_prints=True)
+def val_format(valid_object: SubmVal):
+    validation_str, passed_filelist = valid_object.validate_format()
+    return validation_str, passed_filelist
+
+
 @task(name="Validate Required Properties", log_prints=True)
-def val_required(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
-    validation_str = valid_object.validate_required_properties(data_model=datamodel_obj)
+def val_required(valid_object: SubmVal, datamodel_obj: ReadDataModel, filepath_list: list[str]) -> str:
+    validation_str = valid_object.validate_required_properties(data_model=datamodel_obj, filepath_list=filepath_list)
     return validation_str
 
 
 @task(name="Validate Whitespace", log_prints=True)
-def val_whitespace(valid_object: SubmVal) -> str:
-    validation_str = valid_object.validate_whitespace_issue()
+def val_whitespace(valid_object: SubmVal, filepath_list: list[str]) -> str:
+    validation_str = valid_object.validate_whitespace_issue(filepath_list=filepath_list)
     return validation_str
 
 
 @task(name="Validate Numeric and Integer Properties", log_prints=True)
-def val_numeric(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
-    validation_str = valid_object.validate_numeric_integer(data_model=datamodel_obj)
+def val_numeric(valid_object: SubmVal, datamodel_obj: ReadDataModel, filepath_list: list[str]) -> str:
+    validation_str = valid_object.validate_numeric_integer(data_model=datamodel_obj, filepath_list=filepath_list)
     return validation_str
 
 
 @task(name="Validate Terms and Value Sets", log_prints=True)
 def val_terms(
-    valid_object: SubmVal, datamodel_obj: ReadDataModel, commons_acronym: str
+    valid_object: SubmVal, datamodel_obj: ReadDataModel, commons_acronym: str, filepath_list: list[str]
 ) -> str:
     validation_str = valid_object.validate_terms_value_sets(
-        data_model=datamodel_obj, commons_acronym=commons_acronym
+        data_model=datamodel_obj, commons_acronym=commons_acronym, filepath_list=filepath_list
     )
     return validation_str
 
 
 @task(name="Validate Cross Links", log_prints=True)
-def val_crosslinks(valid_object: SubmVal) -> str:
-    validation_str = valid_object.validate_cross_links()
+def val_crosslinks(valid_object: SubmVal, filepath_list: list[str]) -> str:
+    validation_str = valid_object.validate_cross_links(filepath_list=filepath_list)
     return validation_str
 
 
 @task(name="Validate Unique Key ID", log_prints=True)
-def val_keyid(valid_object: SubmVal, datamodel_obj: ReadDataModel) -> str:
-    validation_str = valid_object.validate_unique_key_id(data_model=datamodel_obj)
+def val_keyid(valid_object: SubmVal, datamodel_obj: ReadDataModel, filepath_list: list[str]) -> str:
+    validation_str = valid_object.validate_unique_key_id(data_model=datamodel_obj, filepath_list=filepath_list)
     return validation_str
 
 
@@ -87,16 +93,24 @@ def write_report(
     with open(output_name, "a+") as outf:
         outf.write(report_header)
 
+    # validate format
+    format_validation, passed_files = val_format(valid_object=valid_object)
+    with open(output_name, "a+") as outf:
+        outf.write(format_validation)
+    print(f"Files that passed format validation: {*passed_files,}")
+    print("Submission file format validation finished")
+
     # validate required property
     rq_prop_validation = val_required(
-        valid_object=valid_object, datamodel_obj=datamodel_object
+        valid_object=valid_object, datamodel_obj=datamodel_object, filepath_list=passed_files
     )
     with open(output_name, "a+") as outf:
         outf.write(rq_prop_validation)
     print("Required properties validation finished")
 
     # validate whitespace
-    ws_validation = val_whitespace(valid_object=valid_object)
+    ws_validation = val_whitespace(valid_object=valid_object, filepath_list=passed_files
+                                   )
     with open(output_name, "a+") as outf:
         outf.write(ws_validation)
     print("Whitespace validation finished")
@@ -106,6 +120,7 @@ def write_report(
         valid_object=valid_object,
         datamodel_obj=datamodel_object,
         commons_acronym=commons_acronym,
+        filepath_list=passed_files
     )
     with open(output_name, "a+") as outf:
         outf.write(terms_validation)
@@ -113,14 +128,14 @@ def write_report(
 
     # validate numeric and integer properties
     numeric_validation = val_numeric(
-        valid_object=valid_object, datamodel_obj=datamodel_object
+        valid_object=valid_object, datamodel_obj=datamodel_object, filepath_list=passed_files
     )
     with open(output_name, "a+") as outf:
         outf.write(numeric_validation)
     print("Numeric and integer properties validation finished")
 
     # validate cross links
-    cl_validation = val_crosslinks(valid_object=valid_object)
+    cl_validation = val_crosslinks(valid_object=valid_object, filepath_list=passed_files)
     with open(output_name, "a+") as outf:
         outf.write(cl_validation)
     print("Crosslink validation finished")
@@ -128,7 +143,7 @@ def write_report(
     # validate key id
     if not skip_uniq_key:
         key_validation = val_keyid(
-            valid_object=valid_object, datamodel_obj=datamodel_object
+            valid_object=valid_object, datamodel_obj=datamodel_object, filepath_list=passed_files
         )
         with open(output_name, "a+") as outf:
             outf.write(key_validation)
