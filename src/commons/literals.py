@@ -4,7 +4,8 @@ from dataclasses import dataclass, field
 class CrdcDHMongoSecrets:
     """A class stores constants related to MongoDB of CRDCDH
     """
-    secret_name = "bento/crdc-hub/dev2"
+    # secret_name = "bento/crdc-hub/dev2"
+    secret_name = "bento/crdc-hub/prod"
     # CRDC DataHub Mongo DB collection names
     submission_collection = "submissions"
     datarecord_colleciton = "dataRecords"

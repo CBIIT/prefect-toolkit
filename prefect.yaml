@@ -42,3 +42,19 @@ deployments:
       name: crdc-dh-dev-validation-ecs
       work_queue_name: null
       job_variables: {}
+
+  - name: dbgap-validation-prod
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflow/crdcdh/dbgap_validation.py:validation_against_dbgap
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+
+    # infra-specific fields
+    work_pool:
+      name: crdc-dh-prod-validation-ecs
+      work_queue_name: null
+      job_variables: {}
