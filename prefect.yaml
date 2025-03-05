@@ -58,3 +58,14 @@ deployments:
       name: crdc-dh-prod-validation-ecs
       work_queue_name: null
       job_variables: {}
+    
+    pull:
+      - prefect.projects.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/prefect-toolkit.git
+          branch: CRDCDH-dbgap_validation_prod
+          include_submodules: True
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: True
