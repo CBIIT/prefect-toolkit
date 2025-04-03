@@ -134,6 +134,7 @@ Model property YAML file:
             # check first row (header)
             if linenumber == 1:
                 column_names = line.split("\t")
+                column_names = [item.replace('"','') for item in column_names]
                 column_number = len(column_names)
                 print_str = print_str + f"INFO: {column_number} column names found in the first row/header\n\t"
                 # try to identify if any empty column names
