@@ -47,6 +47,15 @@ class CommonsRepo:
             "master_zipball": "https://github.com/CBIIT/c3dc-model/archive/refs/heads/main.zip",
         }
     )
+    ctdc: dict = field(
+        default_factory=lambda: {
+            "repo": "https://github.com/CBIIT/ctdc-model",
+            "model_yaml": "model-desc/ctdc_model_file.yaml",
+            "props_yaml": "model-desc/ctdc_model_properties_file.yaml",
+            "tags_api": "https://api.github.com/repos/CBIIT/ctdc-model/tags",
+            "master_zipball": "https://github.com/CBIIT/ctdc-model/archive/refs/heads/main.zip",
+        }
+    )
 
 @dataclass
 class CommonsFeat:
@@ -58,3 +67,4 @@ class CommonsFeat:
     ccdi: dict = field(default_factory=lambda: {"delimiter": ";"})
     cds: dict = field(default_factory=lambda: {"delimiter": "|"})
     c3dc: dict = field(default_factory=lambda: {"delimiter": ";"})
+    ctdc: dict = field(default_factory=lambda: {"delimiter": "|"})
