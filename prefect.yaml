@@ -42,3 +42,28 @@ deployments:
       name: crdc-dh-dev-validation-ecs
       work_queue_name: null
       job_variables: {}
+
+
+  - name: TEST-multimodel-validator-V2
+    version: null
+    tags: ["TEST", "Qiong", "V2"]
+    description: null
+    entrypoint: workflow/validate_submission.py:validate_submission_tsv
+    schedule: null
+
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/prefect-toolkit.git
+          branch: reverse_to_v2_requirements
+          include_submodules: True
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
+      work_queue_name: null
+      job_variables: {}
