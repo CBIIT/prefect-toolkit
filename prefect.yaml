@@ -4,7 +4,7 @@
 
 # Generic metadata about this project
 name: s3-Prefect-Workflow
-prefect-version: 2.13.0
+prefect-version: 3.2.14
 
 # build section allows you to manage and build docker images
 build: null
@@ -42,3 +42,29 @@ deployments:
       name: crdc-dh-dev-validation-ecs
       work_queue_name: null
       job_variables: {}
+  
+
+  - name: TEST-multimodel-validator-v3
+    version: null
+    tags: ["TEST", "Multimodel", "V3"]
+    description: null
+    entrypoint: workflow/validate_submission.py:validate_submission_tsv
+    schedule: null
+
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/prefect-toolkit.git
+          branch: add_new_requirements
+          include_submodules: True
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements_v3.2.14.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
+
