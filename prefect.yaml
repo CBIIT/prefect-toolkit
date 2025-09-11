@@ -52,12 +52,12 @@ deployments:
     schedule: null
 
     pull:
-      - prefect.projects.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/prefect-toolkit.git
           branch: add_new_requirements
           include_submodules: True
-      - prefect.projects.steps.pip_install_requirements:
+      - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_v3.2.14.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
