@@ -235,7 +235,7 @@ def validate_data_model(
     commons_name: DropDownChoices, val_output_bucket: str, runner: str, tag: str = ""
 ) -> None:
     """Prefect flow that generates a table of data model props (tsv) which can be used for
-    submssion file validation
+    submission file validation
 
     Args:
         commons_name (DropDownChoices): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc, ctdc
