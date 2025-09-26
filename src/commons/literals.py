@@ -4,10 +4,11 @@ from dataclasses import dataclass, field
 class CrdcDHMongoSecrets:
     """A class stores constants related to MongoDB of CRDCDH
     """
-    secret_name = "bento/crdc-hub/dev2"
+    secret_name_dev = "bento/crdc-hub/dev2"
+    secret_name_prod = "bento/crdc-hub/prod"
     # CRDC DataHub Mongo DB collection names
     submission_collection = "submissions"
-    datarecord_colleciton = "dataRecords"
+    datarecord_collection = "dataRecords"
 
 @dataclass
 class CommonsRepo:
@@ -56,6 +57,16 @@ class CommonsRepo:
             "master_zipball": "https://github.com/CBIIT/ctdc-model/archive/refs/heads/main.zip",
         }
     )
+    ccdi_dcc: dict = field(
+        default_factory=lambda: {
+            "repo": "https://github.com/CBIIT/ccdi-dcc-model",
+            "model_yaml": "model-desc/ccdi-dcc-model.yml",
+            "props_yaml": "model-desc/ccdi-dcc-model-props.yml",
+            "tags_api": "https://api.github.com/repos/CBIIT/ccdi-dcc-model/tags",
+            "master_zipball": "https://github.com/CBIIT/ccdi-dcc-model/archive/refs/heads/main.zip",
+        }
+    )
+
 
 @dataclass
 class CommonsFeat:
@@ -68,3 +79,4 @@ class CommonsFeat:
     cds: dict = field(default_factory=lambda: {"delimiter": "|"})
     c3dc: dict = field(default_factory=lambda: {"delimiter": ";"})
     ctdc: dict = field(default_factory=lambda: {"delimiter": "|"})
+    ccdi_dcc: dict = field(default_factory=lambda: {"delimiter": ";"})

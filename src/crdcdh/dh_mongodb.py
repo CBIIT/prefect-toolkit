@@ -8,9 +8,16 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
     """A Class interacts with DataHub MongoDB
     """    
 
-    def __init__(self):
+    def __init__(self, tier: str = "dev") -> None:
         """Inits DataHubMongoDB
         """
+        self.tier = tier
+        if self.tier == "dev":
+            self.secret_name = self.secret_name_dev
+        elif self.tier == "prod":
+            self.secret_name = self.secret_name_prod
+        else:
+            raise ValueError(f"Unknown tier: {self.tier}")
 
     def _mongo_connection_str(self) -> str:
         """Returns connection str of 
@@ -139,7 +146,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         client = self._mongodb_client()
         db_name =  self._mongo_db_name()
         db = client[db_name]
-        record_collection = db[self.datarecord_colleciton]
+        record_collection = db[self.datarecord_collection]
         try:
             record_collection_query = record_collection.find(
                 {"submissionID": submission_id, "nodeType": "study"},
@@ -166,6 +173,53 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             )
             return None
 
+    def get_consent_group(self, submission_id: str) -> Union[dict, None]:
+        """Returns a list of consent groups of a submission
+
+        Args:
+            submission_id (str): submissionID in "dataRecords" Collection or 
+            _id in "submissions" Collection. We assume only one study is associated with
+            this submissionID
+
+        Returns:
+            list[str]|None: A list of consent groups of a submission
+        """
+        client = self._mongodb_client()
+        db_name =  self._mongo_db_name()
+        db = client[db_name]
+        record_collection = db[self.datarecord_collection]
+        try:
+            query_return_list = record_collection.find(
+                {"submissionID": submission_id, "nodeType": "consent_group"},
+                {
+                    "nodeID": 1,
+                    "props.consent_group_name": 1,
+                    "props.consent_group_number": 1,
+                },
+            )
+            # we assume this submission id is only associated with one study
+            consent_dict = {}
+            if record_collection.count_documents({"submissionID":submission_id, "nodeType":"consent_group"}) > 0:
+                for item in query_return_list:
+                    item_id =  item["nodeID"]
+                    consent_dict[item_id] = {
+                        "consent_group_name": item["props"]["consent_group_name"],
+                        "consent_group_number": item["props"]["consent_group_number"],
+                    }
+            else:
+                print(f"No consent_group node found in submission {submission_id}")
+                # this will stop the flow if no consent group is found in submission
+                raise ValueError(f"No consent_group node found in submission {submission_id}")
+            return consent_dict
+        except errors.PyMongoError as pe:
+            print(f"Failed to query consent_group in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}")
+            return None
+        except Exception as e:
+            print(
+                f"Failed to query consent_group in dataRecords collection with submissionID: {submission_id}\n{repr(e)}"
+            )
+            return None
+
     def get_study_participants(self, submission_id: str) -> Union[list[str], None]:
         """Returns a list of participant ids of a submission
 
@@ -180,7 +234,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         client = self._mongodb_client()
         db_name =  self._mongo_db_name()
         db = client[db_name]
-        record_collection = db[self.datarecord_colleciton]
+        record_collection = db[self.datarecord_collection]
         try:
             query_return_list = record_collection.find({"submissionID":submission_id, "nodeType":"participant"},{"nodeID":1, "props.participant_id":1})
             # we assume this submission id is only associated with one study
@@ -215,7 +269,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         client = self._mongodb_client()
         db_name =  self._mongo_db_name()
         db = client[db_name]
-        record_collection = db[self.datarecord_colleciton]
+        record_collection = db[self.datarecord_collection]
         try:
             query_return_list = record_collection.find(
                 {"submissionID": submission_id, "nodeType": "sample"},
@@ -251,5 +305,69 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         except Exception as e:
             print(
                 f"Failed to query sample_id in dataRecords collection with submissionID: {submission_id}\n{repr(e)}"
+            )
+            return None
+
+    def get_study_participants_consent(self, submission_id: str) -> Union[dict, None]:
+        """Returns a dict of participant ids and their consent code of a submission
+
+        Args:
+            submission_id (str): submissionID in "dataRecords" Collection or
+            _id in "submissions" Collection. We assume only one study is associated with
+            this submissionID
+
+        Returns:
+            dict|None: A dict of participant ids and their consent code of a submission
+        """
+        client = self._mongodb_client()
+        db_name =  self._mongo_db_name()
+        db = client[db_name]
+        record_collection = db[self.datarecord_collection]
+        # if no consent group node is found, the flow will stop at this step
+        consent_dict = self.get_consent_group(submission_id=submission_id)
+
+        try:
+            query_return_list = record_collection.find(
+                {
+                    "nodeType": "participant",
+                    "submissionID": {submission_id},
+                    "parents.parentType": "consent_group",
+                },
+                {"props.participant_id": 1, "parents": 1},
+            )
+            # we assume this submission id is only associated with one study
+            participant_consent_dict = {}
+            if (
+                record_collection.count_documents(
+                    {"submissionID": submission_id, "nodeType": "participant"}
+                )
+                > 0
+            ):
+                for item in query_return_list:
+                    # get participant_id
+                    item_id = item["props"]["participant_id"]
+                    # value under "parents" key stores linkage info
+                    item_parents = item["parents"]
+                    # the query requires return participant has a linkage towards consent_group
+                    for parent in item_parents:
+                        if parent["parentType"] == "consent_group":
+                            item_consent_id = parent["parentIDValue"]
+                            item_consent_name = consent_dict[item_consent_id]["consent_group_name"]
+                            item_consent_number = consent_dict[item_consent_id]["consent_group_number"]
+                            participant_consent_dict[item_id] = {"consent_group_number":item_consent_number, "consent_group_name": item_consent_name}
+                        else:
+                            # this is not a linkage towards consent_group
+                            pass
+                return participant_consent_dict
+            else:
+                print(f"No participant found in submission {submission_id}")
+        except errors.PyMongoError as pe:
+            print(
+                f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}"
+            )
+            return None
+        except Exception as e:
+            print(
+                f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\n{repr(e)}"
             )
             return None

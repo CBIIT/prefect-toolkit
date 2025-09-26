@@ -5,10 +5,11 @@ from src.crdcdh.dh_mongodb import DataHubMongoDB
 from src.commons.dbgap_sstr import SstrHaul
 from typing import TypeVar
 import pandas as pd
+from typing import Literal
 
 
 DataFrame = TypeVar("DataFrame")
-
+DropDownChoices = Literal["dev", "prod"]
 
 @task
 def dbgap_validation_md(
@@ -324,11 +325,11 @@ def metadata_validation_str(
     log_prints=True,
     flow_run_name=f"datahub-metadata-validation-{get_time()}",
 )
-def validation_against_dbgap(submission_id: str) -> None:
+def validation_against_dbgap(submission_id: str, tier: DropDownChoices, check_consent_group: bool) -> None:
     logger = get_run_logger()
 
     # create a datahub mongodb
-    db_object = DataHubMongoDB()
+    db_object = DataHubMongoDB(tier=tier)
 
     # get DB participant
     submission_participants = db_object.get_study_participants(

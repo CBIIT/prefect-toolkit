@@ -126,6 +126,30 @@ class SstrHaul:
                 return_dict[subject_id] = consent_subject
         return return_dict
 
+    def get_study_participant_consent(self) -> dict:
+        """Returns a dict of participant ids and their consent code and abbreviation
+
+        Returns:
+            dict: A dict of subjects and their consent code and abbreviation
+        """
+        study_request_url = self.base_url + self._study_version_phrase()
+        subject_cnt = self.get_participant_cnt()
+        # we default 25 subjects per page
+        return_dict = dict()
+        page_count = int(subject_cnt / 25) + 1
+        for i in range(page_count):
+            page = i + 1
+            page_url = study_request_url + f"?page={page}&page_size=25"
+            page_response = self._get_response(request_url=page_url)
+            subjects_list = page_response["subjects"]
+            for subject in subjects_list:
+                subject_id = subject["submitted_subject_id"]
+                consent_code_subject = subject["consent_code"]
+                consent_name_subject = subject["consent_abbreviation"]
+                return_dict[subject_id] = {"consent_group_number": consent_code_subject,
+                                          "consent_group_name": consent_name_subject}
+        return return_dict
+
     def get_study_samples(self) -> dict:
         """Returns a dict of samples and the subjects they are associated
         with of a study (of a given version)
