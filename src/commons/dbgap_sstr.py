@@ -126,7 +126,7 @@ class SstrHaul:
                 return_dict[subject_id] = consent_subject
         return return_dict
 
-    def get_study_participant_consent(self) -> dict:
+    def get_study_participants_consent(self) -> dict:
         """Returns a dict of participant ids and their consent code and abbreviation
 
         Returns:

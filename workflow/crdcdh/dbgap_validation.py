@@ -272,11 +272,53 @@ def sample_ptc_check(db_sample_dict: dict, dbgap_sample_dict: dict) -> str:
     return message
 
 
+def participant_consent_check(db_ptc_consent_dict: dict, dbgap_ptc_consent_dict: dict) -> str:
+    """Returns a summary string of participants with mismatches of consent codes
+    between DB and dbGaP
+
+    Args:
+        db_ptc_dict (dict): Participant dictionary in DB
+        dbgap_ptc_dict (dict): Participant dictionary in dbGaP
+    Returns:
+        str: A summary string
+    """
+    report_df = pd.DataFrame(columns=["Participant", "DB_consent_group_number", "DB_consent_group_name", "dbGaP_consent_group_number", "dbGaP_consent_group_name"])
+    for key in db_ptc_consent_dict.keys():
+        if key in dbgap_ptc_consent_dict.keys():
+            db_consent_number = db_ptc_consent_dict[key]["consent_group_number"]
+            db_consent_name = db_ptc_consent_dict[key]["consent_group_name"]
+            if db_consent_number != dbgap_ptc_consent_dict[key]["consent_group_number"] or db_consent_name != dbgap_ptc_consent_dict[key]["consent_group_name"]:
+                dbgap_consent_number = dbgap_ptc_consent_dict[key]["consent_group_number"]
+                dbgap_consent_name = dbgap_ptc_consent_dict[key]["consent_group_name"]
+                new_row = {
+                    "Participant": key,
+                    "DB_consent_group_number": db_consent_number,
+                    "DB_consent_group_name": db_consent_name,
+                    "dbGaP_consent_group_number": dbgap_consent_number,
+                    "dbGaP_consent_group_name": dbgap_consent_name
+                }
+                report_df = pd.concat([report_df, pd.DataFrame([new_row])], ignore_index=True)
+            else:
+                # consent_group_number and consent_group_name both match
+                pass
+        else:
+            # participant in db not found in dbgap, skip
+            pass
+    if report_df.shape[0] > 0:
+        report_df_str = report_df.to_markdown(tablefmt="pipe", index=False)
+        message = f"ERROR: Found {report_df.shape[0]} participant(s) with mismatched consent group between DB and dbGaP\n{report_df_str}\n\n"
+    else:
+        message = "INFO: All participants found in DB have matching consent group number and consent group abbreviation in dbGaP\n\n"
+    return message 
+
+
 def metadata_validation_str(
     db_participant_list: list,
     db_sample_dict: dict,
     dbgap_participant_dict: dict,
     dbgap_sample_dict: dict,
+    db_ptc_consent_dict: dict = None,
+    dbgap_ptc_consent_dict: dict = None,
 ) -> str:
     """Returns a Dataframe of metadata validation
 
@@ -317,6 +359,12 @@ def metadata_validation_str(
     s_ptc_match = sample_ptc_check(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
     summary_str += s_ptc_match
 
+    if db_ptc_consent_dict is not None and dbgap_ptc_consent_dict is not None:
+            # participant found in both DB and dbGaP, but their consent group don't match
+        ptc_consent_match = participant_consent_check(db_ptc_consent_dict=db_ptc_consent_dict, dbgap_ptc_consent_dict=dbgap_ptc_consent_dict)
+        summary_str += ptc_consent_match
+    else:
+        pass
     return summary_str
 
 
@@ -363,13 +411,26 @@ def validation_against_dbgap(submission_id: str, tier: DropDownChoices, check_co
         f"Samples found for study {study_accession} in dbGaP: {len(study_sample_dict.keys())}"
     )
 
-    # validation
+    # check consent group info if needed
+    if check_consent_group:
+        logger.info("Checking participants consent group info as requested")
+        db_ptc_consent_dict = db_object.get_study_participants_consent(submission_id=submission_id)
+        dbgap_ptc_consent_dict = sstrhaul.get_study_participants_consent()
+
+    else:
+        logger.info("Skipping checking participants consent group info as requested")
+        db_ptc_consent_dict = None
+        dbgap_ptc_consent_dict = None
+    # create validation summary str
     validation_str = metadata_validation_str(
         db_participant_list=submission_participants,
         db_sample_dict=submission_samples,
         dbgap_participant_dict=study_particpant_dict,
         dbgap_sample_dict=study_sample_dict,
+        db_ptc_consent_dict=db_ptc_consent_dict,
+        dbgap_ptc_consent_dict=dbgap_ptc_consent_dict,
     )
+    logger.info("dbgap validation workflow completed, creating summary artifact")
     # create summary artifact
     dbgap_validation_md(
         submission_id=submission_id,
