@@ -325,6 +325,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         record_collection = db[self.datarecord_collection]
         # if no consent group node is found, the flow will stop at this step
         consent_dict = self.get_consent_group(submission_id=submission_id)
+        print(f"consent_dict: {consent_dict}")
 
         try:
             query_return_list = record_collection.find(
@@ -335,6 +336,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 },
                 {"props.participant_id": 1, "parents": 1},
             )
+            print(f"participant consent query returns {len(query_return_list)} items")
             # we assume this submission id is only associated with one study
             participant_consent_dict = {}
             if (
