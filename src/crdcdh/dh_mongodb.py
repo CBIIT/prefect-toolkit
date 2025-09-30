@@ -5,12 +5,10 @@ from src.commons.utils import get_secret
 
 
 class DataHubMongoDB(CrdcDHMongoSecrets):
-    """A Class interacts with DataHub MongoDB
-    """    
+    """A Class interacts with DataHub MongoDB"""
 
     def __init__(self, tier: str = "dev") -> None:
-        """Inits DataHubMongoDB
-        """
+        """Inits DataHubMongoDB"""
         self.tier = tier
         if self.tier == "dev":
             self.secret_name = self.secret_name_dev
@@ -20,13 +18,13 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             raise ValueError(f"Unknown tier: {self.tier}")
 
     def _mongo_connection_str(self) -> str:
-        """Returns connection str of 
+        """Returns connection str of
 
         Returns:
             str: A string for mongodb connection
         """
-        secret_name =  self.secret_name
-        secret_value_dict =  get_secret(secret_name=secret_name)
+        secret_name = self.secret_name
+        secret_value_dict = get_secret(secret_name=secret_name)
         db_user = secret_value_dict["mongo_db_user"]
         db_password = secret_value_dict["mongo_db_password"]
         db_host = secret_value_dict["mongo_db_host"]
@@ -36,7 +34,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
 
     def _mongodb_client(self):
         connectionstr = self._mongo_connection_str()
-        client =  MongoClient(connectionstr)
+        client = MongoClient(connectionstr)
         return client
 
     def _mongo_db_name(self) -> str:
@@ -44,9 +42,9 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
 
         Returns:
             str: db name
-        """        
-        secret_name =  self.secret_name
-        secret_value_dict =  get_secret(secret_name=secret_name)
+        """
+        secret_name = self.secret_name
+        secret_value_dict = get_secret(secret_name=secret_name)
         db_name = secret_value_dict["database_name"]
         return db_name
 
@@ -87,7 +85,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             return str(latest_version)
         else:
             version = study_version_str.split(".")[1][1:]
-            return version  
+            return version
 
     def get_dbgap_id(self, submission_id: str) -> Union[str, None]:
         """Returns dbGaP accession id in the submissions collection of a submission.
@@ -101,7 +99,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             str|None: a dbGaP accession number, e.g.,"phs000123"
         """
         client = self._mongodb_client()
-        db_name =  self._mongo_db_name()
+        db_name = self._mongo_db_name()
         db = client[db_name]
         submission_collection = db[self.submission_collection]
         try:
@@ -138,13 +136,13 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         """Returns study version of a submission
 
         Args:
-            submission_id (str): 
+            submission_id (str):
 
         Returns:
             str|None: string version of version number
         """
         client = self._mongodb_client()
-        db_name =  self._mongo_db_name()
+        db_name = self._mongo_db_name()
         db = client[db_name]
         record_collection = db[self.datarecord_collection]
         try:
@@ -152,7 +150,12 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 {"submissionID": submission_id, "nodeType": "study"},
                 {"props.study_version": 1},
             )
-            if record_collection.count_documents({"submissionID": submission_id, "nodeType": "study"}) > 0:
+            if (
+                record_collection.count_documents(
+                    {"submissionID": submission_id, "nodeType": "study"}
+                )
+                > 0
+            ):
                 # we are only looking at the first record
                 study_version_str = record_collection_query[0]["props"]["study_version"]
                 study_version = self._find_latest_version(
@@ -177,7 +180,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         """Returns a list of consent groups of a submission
 
         Args:
-            submission_id (str): submissionID in "dataRecords" Collection or 
+            submission_id (str): submissionID in "dataRecords" Collection or
             _id in "submissions" Collection. We assume only one study is associated with
             this submissionID
 
@@ -185,7 +188,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             list[str]|None: A list of consent groups of a submission
         """
         client = self._mongodb_client()
-        db_name =  self._mongo_db_name()
+        db_name = self._mongo_db_name()
         db = client[db_name]
         record_collection = db[self.datarecord_collection]
         try:
@@ -199,9 +202,14 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             )
             # we assume this submission id is only associated with one study
             consent_dict = {}
-            if record_collection.count_documents({"submissionID":submission_id, "nodeType":"consent_group"}) > 0:
+            if (
+                record_collection.count_documents(
+                    {"submissionID": submission_id, "nodeType": "consent_group"}
+                )
+                > 0
+            ):
                 for item in query_return_list:
-                    item_id =  item["nodeID"]
+                    item_id = item["nodeID"]
                     consent_dict[item_id] = {
                         "consent_group_name": item["props"]["consent_group_name"],
                         "consent_group_number": item["props"]["consent_group_number"],
@@ -209,10 +217,14 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             else:
                 print(f"No consent_group node found in submission {submission_id}")
                 # this will stop the flow if no consent group is found in submission
-                raise ValueError(f"No consent_group node found in submission {submission_id}")
+                raise ValueError(
+                    f"No consent_group node found in submission {submission_id}"
+                )
             return consent_dict
         except errors.PyMongoError as pe:
-            print(f"Failed to query consent_group in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}")
+            print(
+                f"Failed to query consent_group in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}"
+            )
             return None
         except Exception as e:
             print(
@@ -224,7 +236,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         """Returns a list of participant ids of a submission
 
         Args:
-            submission_id (str): submissionID in "dataRecords" Collection or 
+            submission_id (str): submissionID in "dataRecords" Collection or
             _id in "submissions" Collection. We assume only one study is associated with
             this submissionID
 
@@ -232,22 +244,32 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             list[str]|None: A list of participant ids of a submission
         """
         client = self._mongodb_client()
-        db_name =  self._mongo_db_name()
+        db_name = self._mongo_db_name()
         db = client[db_name]
         record_collection = db[self.datarecord_collection]
         try:
-            query_return_list = record_collection.find({"submissionID":submission_id, "nodeType":"participant"},{"nodeID":1, "props.participant_id":1})
+            query_return_list = record_collection.find(
+                {"submissionID": submission_id, "nodeType": "participant"},
+                {"nodeID": 1, "props.participant_id": 1},
+            )
             # we assume this submission id is only associated with one study
             participant_list = []
-            if record_collection.count_documents({"submissionID":submission_id, "nodeType":"participant"}) > 0:
+            if (
+                record_collection.count_documents(
+                    {"submissionID": submission_id, "nodeType": "participant"}
+                )
+                > 0
+            ):
                 for item in query_return_list:
-                    item_id =  item["props"]["participant_id"]
+                    item_id = item["props"]["participant_id"]
                     participant_list.append(item_id)
             else:
                 pass
             return participant_list
         except errors.PyMongoError as pe:
-            print(f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}")
+            print(
+                f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}"
+            )
             return None
         except Exception as e:
             print(
@@ -267,7 +289,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             list[str] | None: A list of dictionary with sample id as key and parent participant id as value
         """
         client = self._mongodb_client()
-        db_name =  self._mongo_db_name()
+        db_name = self._mongo_db_name()
         db = client[db_name]
         record_collection = db[self.datarecord_collection]
         try:
@@ -277,7 +299,12 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             )
             # we assume this submission id is only associated with one study
             sample_dict = dict()
-            if record_collection.count_documents({"submissionID": submission_id, "nodeType": "sample"}) > 0:
+            if (
+                record_collection.count_documents(
+                    {"submissionID": submission_id, "nodeType": "sample"}
+                )
+                > 0
+            ):
                 for item in query_return_list:
                     item_id = item["props"]["sample_id"]
                     item_parent = item["parents"][0]["parentIDValue"]
@@ -293,7 +320,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                     item_parent_id = item_parent_query_response[0]["props"][
                         "participant_id"
                     ]
-                    sample_dict[item_id] =  item_parent_id
+                    sample_dict[item_id] = item_parent_id
             else:
                 pass
             return sample_dict
@@ -320,7 +347,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             dict|None: A dict of participant ids and their consent code of a submission
         """
         client = self._mongodb_client()
-        db_name =  self._mongo_db_name()
+        db_name = self._mongo_db_name()
         db = client[db_name]
         record_collection = db[self.datarecord_collection]
         # if no consent group node is found, the flow will stop at this step
@@ -328,6 +355,15 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         print(f"consent_dict: {consent_dict}")
 
         try:
+            query_return_list_alt = record_collection.find(
+                {
+                    "nodeType": "participant",
+                    "submissionID": {submission_id},
+                },
+                {"props.participant_id": 1, "parents": 1},
+            )
+            print(len(query_return_list_alt))
+            print(query_return_list_alt[0])
             query_return_list = record_collection.find(
                 {
                     "nodeType": "participant",
@@ -336,6 +372,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 },
                 {"props.participant_id": 1, "parents": 1},
             )
+            
             print(query_return_list)
             print(f"participant consent query returns {len(query_return_list)} items")
             # we assume this submission id is only associated with one study
@@ -355,9 +392,16 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                     for parent in item_parents:
                         if parent["parentType"] == "consent_group":
                             item_consent_id = parent["parentIDValue"]
-                            item_consent_name = consent_dict[item_consent_id]["consent_group_name"]
-                            item_consent_number = consent_dict[item_consent_id]["consent_group_number"]
-                            participant_consent_dict[item_id] = {"consent_group_number":item_consent_number, "consent_group_name": item_consent_name}
+                            item_consent_name = consent_dict[item_consent_id][
+                                "consent_group_name"
+                            ]
+                            item_consent_number = consent_dict[item_consent_id][
+                                "consent_group_number"
+                            ]
+                            participant_consent_dict[item_id] = {
+                                "consent_group_number": item_consent_number,
+                                "consent_group_name": item_consent_name,
+                            }
                         else:
                             # this is not a linkage towards consent_group
                             pass
