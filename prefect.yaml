@@ -42,3 +42,29 @@ deployments:
       name: crdc-dh-dev-validation-ecs
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST-dbgap_validation
+    version: null
+    tags: ["TEST", "Qiong"]
+    description: null
+    entrypoint: workflow/crdcdh/dbgap_validation.py:validation_against_dbgap
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+
+    pull:
+      - prefect.projects.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/prefect-toolkit.git
+          branch: CRDCDH-1415_dbgap_validation_improvement
+          include_submodules: True
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: True
+    # infra-specific fields
+    work_pool:
+      name: crdc-dh-prod-validation-ecs
+      work_queue_name: null
+      job_variables: {}

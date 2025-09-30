@@ -9,7 +9,8 @@ from typing import Literal
 
 
 DataFrame = TypeVar("DataFrame")
-DropDownChoices = Literal["dev", "prod"]
+TierDropDownChoices = Literal["dev", "prod"]
+BoolDropDownChoices = Literal[True, False]
 
 @task
 def dbgap_validation_md(
@@ -373,7 +374,7 @@ def metadata_validation_str(
     log_prints=True,
     flow_run_name=f"datahub-metadata-validation-{get_time()}",
 )
-def validation_against_dbgap(submission_id: str, tier: DropDownChoices, check_consent_group: bool) -> None:
+def validation_against_dbgap(submission_id: str, tier: TierDropDownChoices, check_consent_group: BoolDropDownChoices) -> None:
     logger = get_run_logger()
 
     # create a datahub mongodb
