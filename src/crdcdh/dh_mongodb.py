@@ -336,6 +336,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 },
                 {"props.participant_id": 1, "parents": 1},
             )
+            print(query_return_list)
             print(f"participant consent query returns {len(query_return_list)} items")
             # we assume this submission id is only associated with one study
             participant_consent_dict = {}
