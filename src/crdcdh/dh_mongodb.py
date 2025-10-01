@@ -367,14 +367,22 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 query_wo_consent_count += 1
                 print(json.dumps(item, indent=4))
             print(
-                f"participant query without consent filtering returns {query_wo_consent_count} items"
+                f"Participant query without consent filtering returns {query_wo_consent_count} item(s)"
             )
 
             # filter participants that have a linkage towards consent_group
-            print("querying participants with filtering on consent_group linkage")
+            print("Querying participants with filtering on consent_group linkage")
 
             # we assume this submission id is only associated with one study
             participant_consent_dict = {}
+            participant_count_with_study = record_collection.count_documents(
+                {
+                    "submissionID": submission_id,
+                    "nodeType": "participant",
+                    "parents.parentType": "study",
+                }
+            )
+            print(f"Participants query with study linkage filtering returns {participant_count_with_study} item(s)" )
             participant_count_with_consent = record_collection.count_documents(
                 {
                     "submissionID": submission_id,
@@ -383,7 +391,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 }
             )
             print(
-                f"Participants query with consent filtering returns {participant_count_with_consent}"
+                f"Participants query with consent linkage filtering returns {participant_count_with_consent} item(s)"
             )
             if participant_count_with_consent > 0:
                 query_return_list = record_collection.find(
