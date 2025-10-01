@@ -356,13 +356,20 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         print(f"consent_dict: {consent_dict}")
 
         try:
+            # query participants without filtering on consent_group linkage
+            print("querying participants without filtering on consent_group linkage")
             query_return_list_alt = record_collection.find(
                 {"submissionID": submission_id, "nodeType": "participant"},
                 {"props.participant_id": 1, "parents": 1}
             )
-            print(f"participant query without consent filtering returns {len(list(query_return_list_alt))} items")
+            query_wo_consent_count = 0
             for item in query_return_list_alt:
-                print(item)
+                query_wo_consent_count += 1
+                print(json.dumps(item, indent=4))
+            print(
+                f"participant query without consent filtering returns {query_wo_consent_count} items"
+            )
+
             # filter participants that have a linkage towards consent_group
             query_return_list = record_collection.find(
                 {
@@ -372,9 +379,9 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 },
                 {"props.participant_id": 1, "parents": 1}
             )
-            print(f"participant consent query returns {len(list(query_return_list))} items")
             # we assume this submission id is only associated with one study
             participant_consent_dict = {}
+            print("querying participants with filtering on consent_group linkage")
             if (
                 record_collection.count_documents(
                     {
@@ -393,6 +400,9 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                     # the query requires return participant has a linkage towards consent_group
                     for parent in item_parents:
                         if parent["parentType"] == "consent_group":
+                            print(
+                                f"participant {item_id} has a parentType that's a consent_group, getting consent info"
+                            )
                             item_consent_id = parent["parentIDValue"]
                             item_consent_name = consent_dict[item_consent_id][
                                 "consent_group_name"
@@ -405,6 +415,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                                 "consent_group_name": item_consent_name,
                             }
                         else:
+                            print(f"participant {item_id} has a parentType other than consent_group, skipping")
                             # this is not a linkage towards consent_group
                             pass
                 return participant_consent_dict
