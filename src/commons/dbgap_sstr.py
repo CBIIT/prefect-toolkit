@@ -63,9 +63,13 @@ class SstrHaul:
 
         Returns:
             dict: response of url request
-        """        
+        """    
         response = requests.get(request_url)
-        return response.json()
+        try:
+            response.json()
+            return response.json()
+        except ValueError as err:
+            print(f"Not a valid JSON response: {response.text}")
 
     def _study_version_phrase(self) -> str:
         """Returns a phrase that can be appended to self.base_url
@@ -115,7 +119,9 @@ class SstrHaul:
         # we default 25 subjects per page
         return_dict = dict()
         page_count = int(subject_cnt / 25) + 1
+        print("getting participants from dbGaP")
         for i in range(page_count):
+            print(f"fetching page {i + 1}")
             page = i + 1
             page_url = study_request_url + f"?page={page}&page_size=25"
             page_response = self._get_response(request_url=page_url)
@@ -137,7 +143,9 @@ class SstrHaul:
         # we default 25 subjects per page
         return_dict = dict()
         page_count = int(subject_cnt / 25) + 1
+        print("getting participants and their consent information from dbGaP")
         for i in range(page_count):
+            print(f"fetching page {i + 1}")
             page = i + 1
             page_url = study_request_url + f"?page={page}&page_size=25"
             page_response = self._get_response(request_url=page_url)
@@ -162,7 +170,9 @@ class SstrHaul:
         # we default 25 subjects per page
         return_dict = dict()
         page_count = int(subject_cnt / 25) + 1
+        print("getting samples from dbGaP")
         for i in range(page_count):
+            print(f"fetching page {i + 1}")
             page = i + 1
             page_url = study_request_url + f"?page={page}&page_size=25"
             page_response = self._get_response(request_url=page_url)
