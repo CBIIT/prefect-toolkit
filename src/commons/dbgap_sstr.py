@@ -69,7 +69,7 @@ class SstrHaul:
             response.json()
             return response.json()
         except ValueError as err:
-            print(f"Not a valid JSON response: {response.text}")
+            print(f"Not a valid JSON response through {request_url}: {repr(err)}")
 
     def _study_version_phrase(self) -> str:
         """Returns a phrase that can be appended to self.base_url
