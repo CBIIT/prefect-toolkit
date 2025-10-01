@@ -358,12 +358,11 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         try:
             query_return_list_alt = record_collection.find(
                 {"submissionID": submission_id, "nodeType": "participant"},
-                {"nodeID": 1, "props.participant_id": 1},
+                {"props.participant_id": 1, "parents": 1}
             )
             print(f"participant query without consent filtering returns {len(list(query_return_list_alt))} items")
             for item in query_return_list_alt:
-                print(json.dumps(item, indent=2))
-                break
+                print(item)
             # filter participants that have a linkage towards consent_group
             query_return_list = record_collection.find(
                 {
@@ -371,7 +370,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                     "submissionID": submission_id,
                     "parents.parentType": "consent_group"
                 },
-                {"props.participant_id": 1, "parents": 1},
+                {"props.participant_id": 1, "parents": 1}
             )
             print(f"participant consent query returns {len(list(query_return_list))} items")
             # we assume this submission id is only associated with one study
