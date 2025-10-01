@@ -2,6 +2,7 @@ from pymongo import MongoClient, errors
 from typing import Union
 from src.commons.literals import CrdcDHMongoSecrets
 from src.commons.utils import get_secret
+import json
 
 
 class DataHubMongoDB(CrdcDHMongoSecrets):
@@ -360,6 +361,9 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 {"nodeID": 1, "props.participant_id": 1},
             )
             print(f"participant query without consent filtering returns {len(list(query_return_list_alt))} items")
+            for item in query_return_list_alt:
+                print(json.dumps(item, indent=2))
+                break
             # filter participants that have a linkage towards consent_group
             query_return_list = record_collection.find(
                 {
