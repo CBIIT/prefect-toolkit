@@ -123,7 +123,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
 
         except errors.PyMongoError as pe:
             print(
-                f"Failed to find submission in submissions collection: {submission_id}\n{repr(pe)}"
+                f"Failed to find submission in submissions collection: {submission_id}\nPyMongoError: {repr(pe)}"
             )
             return None
         except Exception as e:
@@ -167,7 +167,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 return None
         except errors.PyMongoError as pe:
             print(
-                f"Failed to find submission study version in dataRecords collection: {submission_id}\n{repr(pe)}"
+                f"Failed to find submission study version in dataRecords collection: {submission_id}\nPyMongoError: {repr(pe)}"
             )
             return None
         except Exception as e:
@@ -223,7 +223,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             return consent_dict
         except errors.PyMongoError as pe:
             print(
-                f"Failed to query consent_group in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}"
+                f"Failed to query consent_group in dataRecords collection with submissionID: {submission_id}\nPyMongoError: {repr(pe)}"
             )
             return None
         except Exception as e:
@@ -268,7 +268,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             return participant_list
         except errors.PyMongoError as pe:
             print(
-                f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}"
+                f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\nPyMongoError: {repr(pe)}"
             )
             return None
         except Exception as e:
@@ -326,7 +326,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             return sample_dict
         except errors.PyMongoError as pe:
             print(
-                f"Failed to query sample_id in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}"
+                f"Failed to query sample_id in dataRecords collection with submissionID: {submission_id}\nPyMongoError: {repr(pe)}"
             )
             return None
         except Exception as e:
@@ -365,11 +365,10 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 {
                     "nodeType": "participant",
                     "submissionID": submission_id,
-                    "parents.parentType": "consent_group",
+                    "parents.parentType": "consent_group"
                 },
                 {"props.participant_id": 1, "parents": 1},
             )
-            print(list(query_return_list)[0])
             print(f"participant consent query returns {len(list(query_return_list))} items")
             # we assume this submission id is only associated with one study
             participant_consent_dict = {}
@@ -410,7 +409,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 print(f"No participant found in submission {submission_id}")
         except errors.PyMongoError as pe:
             print(
-                f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\n{repr(pe)}"
+                f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\nPyMongoError: {repr(pe)}"
             )
             return None
         except Exception as e:
