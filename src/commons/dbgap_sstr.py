@@ -116,14 +116,14 @@ class SstrHaul:
         """        
         study_request_url = self.base_url + self._study_version_phrase()
         subject_cnt = self.get_participant_cnt()
-        # we default 25 subjects per page
+        # we default 50 subjects per page
         return_dict = dict()
-        page_count = int(subject_cnt / 25) + 1
+        page_count = int(subject_cnt / 50) + 1
         print("getting participants from dbGaP")
         for i in range(page_count):
             print(f"fetching page {i + 1}")
             page = i + 1
-            page_url = study_request_url + f"?page={page}&page_size=25"
+            page_url = study_request_url + f"?page={page}&page_size=50"
             page_response = self._get_response(request_url=page_url)
             subjects_list = page_response["subjects"]
             for subject in subjects_list:
@@ -140,14 +140,14 @@ class SstrHaul:
         """
         study_request_url = self.base_url + self._study_version_phrase()
         subject_cnt = self.get_participant_cnt()
-        # we default 25 subjects per page
+        # we default 50 subjects per page
         return_dict = dict()
-        page_count = int(subject_cnt / 25) + 1
+        page_count = int(subject_cnt / 50) + 1
         print("getting participants and their consent information from dbGaP")
         for i in range(page_count):
             print(f"fetching page {i + 1}")
             page = i + 1
-            page_url = study_request_url + f"?page={page}&page_size=25"
+            page_url = study_request_url + f"?page={page}&page_size=50"
             page_response = self._get_response(request_url=page_url)
             subjects_list = page_response["subjects"]
             for subject in subjects_list:
@@ -167,14 +167,14 @@ class SstrHaul:
         """
         study_request_url = self.base_url + self._study_version_phrase()
         subject_cnt = self.get_participant_cnt()
-        # we default 25 subjects per page
+        # we default 50 subjects per page
         return_dict = dict()
-        page_count = int(subject_cnt / 25) + 1
+        page_count = int(subject_cnt / 50) + 1
         print("getting samples from dbGaP")
         for i in range(page_count):
             print(f"fetching page {i + 1}")
             page = i + 1
-            page_url = study_request_url + f"?page={page}&page_size=25"
+            page_url = study_request_url + f"?page={page}&page_size=50"
             page_response = self._get_response(request_url=page_url)
             subjects_list = page_response["subjects"]
             for subject in subjects_list:
