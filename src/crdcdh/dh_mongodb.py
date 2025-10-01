@@ -360,7 +360,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             print("querying participants without filtering on consent_group linkage")
             query_return_list_alt = record_collection.find(
                 {"submissionID": submission_id, "nodeType": "participant"},
-                {"props.participant_id": 1, "parents": 1}
+                {"props.participant_id": 1, "parents": 1},
             )
             query_wo_consent_count = 0
             for item in query_return_list_alt:
@@ -371,27 +371,29 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             )
 
             # filter participants that have a linkage towards consent_group
-            query_return_list = record_collection.find(
-                {
-                    "nodeType": "participant",
-                    "submissionID": submission_id,
-                    "parents.parentType": "consent_group"
-                },
-                {"props.participant_id": 1, "parents": 1}
-            )
+            print("querying participants with filtering on consent_group linkage")
+
             # we assume this submission id is only associated with one study
             participant_consent_dict = {}
-            print("querying participants with filtering on consent_group linkage")
-            if (
-                record_collection.count_documents(
+            participant_count_with_consent = record_collection.count_documents(
+                {
+                    "submissionID": submission_id,
+                    "nodeType": "participant",
+                    "parents.parentType": "consent_group",
+                }
+            )
+            print(
+                f"Participants query with consent filtering returns {participant_count_with_consent}"
+            )
+            if participant_count_with_consent > 0:
+                query_return_list = record_collection.find(
                     {
-                        "submissionID": submission_id,
                         "nodeType": "participant",
+                        "submissionID": submission_id,
                         "parents.parentType": "consent_group",
-                    }
+                    },
+                    {"props.participant_id": 1, "parents": 1},
                 )
-                > 0
-            ):
                 for item in query_return_list:
                     # get participant_id
                     item_id = item["props"]["participant_id"]
@@ -415,12 +417,15 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                                 "consent_group_name": item_consent_name,
                             }
                         else:
-                            print(f"participant {item_id} has a parentType other than consent_group, skipping")
+                            print(
+                                f"participant {item_id} has a parentType other than consent_group, skipping"
+                            )
                             # this is not a linkage towards consent_group
                             pass
                 return participant_consent_dict
             else:
-                print(f"No participant found in submission {submission_id}")
+                print(f"No participant with linkage to consent_group found in submission {submission_id}")
+                return None
         except errors.PyMongoError as pe:
             print(
                 f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\nPyMongoError: {repr(pe)}"
