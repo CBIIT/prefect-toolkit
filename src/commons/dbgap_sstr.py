@@ -1,5 +1,6 @@
 import requests
 import re
+import time
 
 
 class SstrHaul:
@@ -125,6 +126,7 @@ class SstrHaul:
             page = i + 1
             page_url = study_request_url + f"?page={page}&page_size=100"
             page_response = self._get_response(request_url=page_url)
+            time.sleep(0.5)  # be nice to the server
             subjects_list = page_response["subjects"]
             for subject in subjects_list:
                 subject_id = subject["submitted_subject_id"]
@@ -149,6 +151,7 @@ class SstrHaul:
             page = i + 1
             page_url = study_request_url + f"?page={page}&page_size=100"
             page_response = self._get_response(request_url=page_url)
+            time.sleep(0.5)  # be nice to the server
             subjects_list = page_response["subjects"]
             for subject in subjects_list:
                 subject_id = subject["submitted_subject_id"]
@@ -176,6 +179,7 @@ class SstrHaul:
             page = i + 1
             page_url = study_request_url + f"?page={page}&page_size=100"
             page_response = self._get_response(request_url=page_url)
+            time.sleep(0.5)  # be nice to the server
             subjects_list = page_response["subjects"]
             for subject in subjects_list:
                 if "samples" in subject.keys():
