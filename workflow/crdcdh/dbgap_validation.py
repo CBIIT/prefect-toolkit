@@ -360,12 +360,20 @@ def metadata_validation_str(
     s_ptc_match = sample_ptc_check(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
     summary_str += s_ptc_match
 
-    if db_ptc_consent_dict is not None and dbgap_ptc_consent_dict is not None:
-            # participant found in both DB and dbGaP, but their consent group don't match
+    if (
+        db_ptc_consent_dict is not None
+        and dbgap_ptc_consent_dict is not None
+        and len(db_ptc_consent_dict) > 0
+    ):
+        # participant found in both DB and dbGaP, but their consent group don't match
         ptc_consent_match = participant_consent_check(db_ptc_consent_dict=db_ptc_consent_dict, dbgap_ptc_consent_dict=dbgap_ptc_consent_dict)
         summary_str += ptc_consent_match
     else:
-        pass
+        if len(db_ptc_consent_dict) == 0:
+            ptc_consent_match += "WARNING: Either no consent_group node found or no participants linked to consent_group node in this submission\n\n"
+            summary_str += ptc_consent_match
+        else:
+            pass
     return summary_str
 
 
@@ -415,13 +423,20 @@ def validation_against_dbgap(submission_id: str, tier: TierDropDownChoices, chec
     # check consent group info if needed
     if check_consent_group:
         logger.info("Checking participants consent group info as requested")
+        logger.info("Getting participants consent group info from DB")
         db_ptc_consent_dict = db_object.get_study_participants_consent(submission_id=submission_id)
+        if len(db_ptc_consent_dict) == 0:
+            logger.error("No consent group information found in DB. Either no consent_group node found or no participants linked to consent_group node in this submission")
+        else:
+            pass
+        logger.info("Getting participants consent group info from dbGaP")
         dbgap_ptc_consent_dict = sstrhaul.get_study_participants_consent()
 
     else:
         logger.info("Skipping checking participants consent group info as requested")
         db_ptc_consent_dict = None
         dbgap_ptc_consent_dict = None
+    
     # create validation summary str
     validation_str = metadata_validation_str(
         db_participant_list=submission_participants,

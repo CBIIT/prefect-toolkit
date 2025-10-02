@@ -357,24 +357,11 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
 
         try:
             # query participants without filtering on consent_group linkage
-            print("querying participants without filtering on consent_group linkage")
-            query_return_list_alt = record_collection.find(
+            # there are cases that participants are only linked to study node while consent node is present
+            all_participant_counts = record_collection.count_documents(
                 {"submissionID": submission_id, "nodeType": "participant"},
-                {"props.participant_id": 1, "parents": 1},
             )
-            query_wo_consent_count = 0
-            for item in query_return_list_alt:
-                query_wo_consent_count += 1
-                print(json.dumps(item, indent=4))
-            print(
-                f"Participant query without consent filtering returns {query_wo_consent_count} item(s)"
-            )
-
-            # filter participants that have a linkage towards consent_group
-            print("Querying participants with filtering on consent_group linkage")
-
             # we assume this submission id is only associated with one study
-            participant_consent_dict = {}
             participant_count_with_study = record_collection.count_documents(
                 {
                     "submissionID": submission_id,
@@ -382,7 +369,12 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                     "parents.parentType": "study",
                 }
             )
-            print(f"Participants query with study linkage filtering returns {participant_count_with_study} item(s)" )
+            print(
+                f"{participant_count_with_study}/ {all_participant_counts} participants are linked to study node"
+            )
+
+            # filter participants that have a linkage towards consent_group
+            print("Querying participants with filtering on consent_group linkage")
             participant_count_with_consent = record_collection.count_documents(
                 {
                     "submissionID": submission_id,
@@ -391,8 +383,10 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 }
             )
             print(
-                f"Participants query with consent linkage filtering returns {participant_count_with_consent} item(s)"
+                f"{participant_count_with_consent}/ {all_participant_counts} participants are linked to consent_group node"
             )
+
+            participant_consent_dict = {}
             if participant_count_with_consent > 0:
                 query_return_list = record_collection.find(
                     {
@@ -433,7 +427,25 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 return participant_consent_dict
             else:
                 print(f"No participant with linkage to consent_group found in submission {submission_id}")
-                return None
+                if len(consent_dict)==1:
+                    print("Only one consent group record found in this submission, assuming all participants belong to this consent group")
+                    # there is only one consent group in this submission, so we can assume all participants belong to this group consent number
+                    consent_group_id = list(consent_dict.keys())[0]
+                    consent_group_name = consent_dict[consent_group_id]["consent_group_name"]
+                    consent_group_number = consent_dict[consent_group_id]["consent_group_number"]
+                    all_participants = record_collection.find(
+                        {"submissionID": submission_id, "nodeType": "participant"},
+                        {"props.participant_id": 1},
+                    )
+                    for item in all_participants:
+                        item_id = item["props"]["participant_id"]
+                        participant_consent_dict[item_id] = {
+                            "consent_group_number": consent_group_number,
+                            "consent_group_name": consent_group_name,
+                        }
+                else:
+                    print(f"More than one consent group found in submission {submission_id}, cannot assume all participants belong to one consent group")
+                return participant_consent_dict
         except errors.PyMongoError as pe:
             print(
                 f"Failed to query particpant_id in dataRecords collection with submissionID: {submission_id}\nPyMongoError: {repr(pe)}"
