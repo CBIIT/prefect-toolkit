@@ -286,7 +286,8 @@ def participant_consent_check(db_ptc_consent_dict: dict, dbgap_ptc_consent_dict:
     report_df = pd.DataFrame(columns=["Participant", "DB_consent_group_number", "DB_consent_group_name", "dbGaP_consent_group_number", "dbGaP_consent_group_name"])
     for key in db_ptc_consent_dict.keys():
         if key in dbgap_ptc_consent_dict.keys():
-            db_consent_number = db_ptc_consent_dict[key]["consent_group_number"]
+            # db consent code is a string, dbgap consent code is an int
+            db_consent_number = int(db_ptc_consent_dict[key]["consent_group_number"])
             db_consent_name = db_ptc_consent_dict[key]["consent_group_name"]
             if db_consent_number != dbgap_ptc_consent_dict[key]["consent_group_number"] or db_consent_name != dbgap_ptc_consent_dict[key]["consent_group_name"]:
                 dbgap_consent_number = dbgap_ptc_consent_dict[key]["consent_group_number"]

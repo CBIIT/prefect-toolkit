@@ -370,7 +370,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 }
             )
             print(
-                f"{participant_count_with_study}/ {all_participant_counts} participants are linked to study node"
+                f"{participant_count_with_study}/{all_participant_counts} participants are linked to study node"
             )
 
             # filter participants that have a linkage towards consent_group
@@ -383,7 +383,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 }
             )
             print(
-                f"{participant_count_with_consent}/ {all_participant_counts} participants are linked to consent_group node"
+                f"{participant_count_with_consent}/{all_participant_counts} participants are linked to consent_group node"
             )
 
             participant_consent_dict = {}
