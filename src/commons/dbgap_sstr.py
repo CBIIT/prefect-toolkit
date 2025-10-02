@@ -121,7 +121,7 @@ class SstrHaul:
         page_count = int(subject_cnt / 100) + 1
         print("getting participants from dbGaP")
         for i in range(page_count):
-            print(f"fetching page {i + 1}")
+            print(f"fetching page {i + 1}/{page_count}")
             page = i + 1
             page_url = study_request_url + f"?page={page}&page_size=100"
             page_response = self._get_response(request_url=page_url)
@@ -145,7 +145,7 @@ class SstrHaul:
         page_count = int(subject_cnt / 100) + 1
         print("getting participants and their consent information from dbGaP")
         for i in range(page_count):
-            print(f"fetching page {i + 1}")
+            print(f"fetching page {i + 1}/{page_count}")
             page = i + 1
             page_url = study_request_url + f"?page={page}&page_size=100"
             page_response = self._get_response(request_url=page_url)
@@ -172,7 +172,7 @@ class SstrHaul:
         page_count = int(subject_cnt / 100) + 1
         print("getting samples from dbGaP")
         for i in range(page_count):
-            print(f"fetching page {i + 1}")
+            print(f"fetching page {i + 1}/{page_count}")
             page = i + 1
             page_url = study_request_url + f"?page={page}&page_size=100"
             page_response = self._get_response(request_url=page_url)

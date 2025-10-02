@@ -353,7 +353,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
         record_collection = db[self.datarecord_collection]
         # if no consent group node is found, the flow will stop at this step
         consent_dict = self.get_consent_group(submission_id=submission_id)
-        print(f"consent_dict: {consent_dict}")
+        print(f"consent_group nodes found in DB: {consent_dict}")
 
         try:
             # query participants without filtering on consent_group linkage
