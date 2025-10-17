@@ -5,7 +5,7 @@ from prefect import get_run_logger, flow, task
 from typing import Literal
 import os
 
-DropDownChoices = Literal["ccdi", "icdc", "cds", "c3dc"]
+DropDownChoices = Literal["ccdi", "icdc", "cds", "c3dc", "ctdc"]
 
 
 @task(name="Validate File Format", log_prints=True)
@@ -166,7 +166,7 @@ def validate_submission_tsv(
 
     Args:
         submission_loc (str): Bucket location of submission files (tsv). Whitespace is NOT allowed, e.g., s3://bucket-name/folder-path
-        commons_name (DropDownChoices): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc
+        commons_name (DropDownChoices): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc, ctdc
         val_output_bucket (str): Bucket name of where validation output be uploaded to
         runner (str): Unique runner name without whitespace, e.g., john_smith
         tag (str, optional): Tag name of the data model. Defaults to "" to use master branch.
@@ -235,10 +235,10 @@ def validate_data_model(
     commons_name: DropDownChoices, val_output_bucket: str, runner: str, tag: str = ""
 ) -> None:
     """Prefect flow that generates a table of data model props (tsv) which can be used for
-    submssion file validation
+    submission file validation
 
     Args:
-        commons_name (DropDownChoices): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc
+        commons_name (DropDownChoices): Commons acronym. Acceptable options are: ccdi, icdc, cds, c3dc, ctdc
         val_output_bucket (str): Bucket name of where the output be uploaded to
         runner (str): Unique runner name without whitespace, e.g., john_smith
         tag (str, optional): Tag name of the data model. Defaults to "" to use master branch.
