@@ -42,3 +42,29 @@ deployments:
       name: crdc-dh-dev-validation-ecs
       work_queue_name: null
       job_variables: {}
+
+  - name: multimodel-validator-python3.13
+    version: null
+    tags: ["Production","Multimodel"]
+    description: null
+    entrypoint: workflow/validate_submission.py:validate_submission_tsv
+    schedule: null
+
+    parameters:
+      val_output_bucket: "ccdi-validation"
+
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/prefect-toolkit.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_prefect3.4.19_python3.13.7.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-16gb-future-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
