@@ -426,12 +426,14 @@ def validation_against_dbgap(submission_id: str, tier: TierDropDownChoices, chec
         logger.info("Checking participants consent group info as requested")
         logger.info("Getting participants consent group info from DB")
         db_ptc_consent_dict = db_object.get_study_participants_consent(submission_id=submission_id)
+        print(db_ptc_consent_dict)
         if len(db_ptc_consent_dict) == 0:
             logger.error("No consent group information found in DB. Either no consent_group node found or no participants linked to consent_group node in this submission")
         else:
             pass
         logger.info("Getting participants consent group info from dbGaP")
         dbgap_ptc_consent_dict = sstrhaul.get_study_participants_consent()
+        print(dbgap_ptc_consent_dict)
 
     else:
         logger.info("Skipping checking participants consent group info as requested")
