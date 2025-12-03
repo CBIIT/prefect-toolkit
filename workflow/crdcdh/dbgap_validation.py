@@ -6,6 +6,7 @@ from src.commons.dbgap_sstr import SstrHaul
 from typing import TypeVar
 import pandas as pd
 from typing import Literal
+import json
 
 
 DataFrame = TypeVar("DataFrame")
@@ -426,14 +427,14 @@ def validation_against_dbgap(submission_id: str, tier: TierDropDownChoices, chec
         logger.info("Checking participants consent group info as requested")
         logger.info("Getting participants consent group info from DB")
         db_ptc_consent_dict = db_object.get_study_participants_consent(submission_id=submission_id)
-        logger.info(db_ptc_consent_dict)
+        logger.info(json.dumps(db_ptc_consent_dict, indent=2))
         if len(db_ptc_consent_dict) == 0:
             logger.error("No consent group information found in DB. Either no consent_group node found or no participants linked to consent_group node in this submission")
         else:
             pass
         logger.info("Getting participants consent group info from dbGaP")
         dbgap_ptc_consent_dict = sstrhaul.get_study_participants_consent()
-        logger.info(dbgap_ptc_consent_dict)
+        logger.info(json.dumps(dbgap_ptc_consent_dict, indent=2))
 
     else:
         logger.info("Skipping checking participants consent group info as requested")
