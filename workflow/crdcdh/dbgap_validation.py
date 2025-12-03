@@ -284,9 +284,15 @@ def participant_consent_check(db_ptc_consent_dict: dict, dbgap_ptc_consent_dict:
     Returns:
         str: A summary string
     """
+    message = f"""
+### Consent Group Check
+
+"""
     report_df = pd.DataFrame(columns=["Participant", "DB_consent_group_number", "DB_consent_group_name", "dbGaP_consent_group_number", "dbGaP_consent_group_name"])
+    db_ptc_found_in_dbgap = 0
     for key in db_ptc_consent_dict.keys():
         if key in dbgap_ptc_consent_dict.keys():
+            db_ptc_found_in_dbgap += 1
             # db consent code is a string, dbgap consent code is an int
             db_consent_number = int(db_ptc_consent_dict[key]["consent_group_number"])
             db_consent_name = db_ptc_consent_dict[key]["consent_group_name"]
@@ -307,11 +313,22 @@ def participant_consent_check(db_ptc_consent_dict: dict, dbgap_ptc_consent_dict:
         else:
             # participant in db not found in dbgap, skip
             pass
-    if report_df.shape[0] > 0:
-        report_df_str = report_df.to_markdown(tablefmt="pipe", index=False)
-        message = f"ERROR: Found {report_df.shape[0]} participant(s) with mismatched consent group between DB and dbGaP\n{report_df_str}\n\n"
+    if db_ptc_found_in_dbgap == 0:
+        message += "ERROR: No participants in DB found in dbGaP for consent group check\n\n"
+    elif db_ptc_found_in_dbgap < len(db_ptc_consent_dict):
+        message += f"WARNING: Only {db_ptc_found_in_dbgap}/{len(db_ptc_consent_dict)} participants in DB found in dbGaP for consent group check\n\n"
+        if report_df.shape[0] > 0:
+            report_df_str = report_df.to_markdown(tablefmt="pipe", index=False)
+            message += f"ERROR: Found {report_df.shape[0]} participant(s) with mismatched consent group between DB and dbGaP\n{report_df_str}\n\n"
+        else:
+            message += f"INFO: {db_ptc_found_in_dbgap}/{len(db_ptc_consent_dict)} participants in DB have matching consent group number and consent group abbreviation in dbGaP\n\n"
     else:
-        message = "INFO: All participants found in DB have matching consent group number and consent group abbreviation in dbGaP\n\n"
+        message += f"INFO: All {db_ptc_found_in_dbgap} participants in DB found in dbGaP for consent group check\n\n"
+        if report_df.shape[0] > 0:
+            report_df_str = report_df.to_markdown(tablefmt="pipe", index=False)
+            message += f"ERROR: Found {report_df.shape[0]} participant(s) with mismatched consent group between DB and dbGaP\n{report_df_str}\n\n"
+        else:
+            message += "INFO: All participants found in DB have matching consent group number and consent group abbreviation in dbGaP\n\n"
     return message 
 
 
