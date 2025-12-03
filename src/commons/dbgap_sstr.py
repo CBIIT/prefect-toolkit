@@ -14,7 +14,7 @@ class SstrHaul:
         self.phs_accession = phs_accession
         self.version_str = version_str
         self._validate_phs()
-        self._validate_version()
+        #self._validate_version() # commented it out in case there is a new version that is to be released but not yet in the API
 
     def _validate_phs(self) -> bool:
         """Validates phs_accession
