@@ -379,7 +379,10 @@ def metadata_validation_str(
     s_ptc_match = sample_ptc_check(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
     summary_str += s_ptc_match
 
-    if (
+    if db_ptc_consent_dict is None and db_ptc_consent_dict is None:
+        # skip consent group check
+        pass
+    elif (
         db_ptc_consent_dict is not None
         and dbgap_ptc_consent_dict is not None
         and len(db_ptc_consent_dict) > 0
@@ -389,7 +392,7 @@ def metadata_validation_str(
         summary_str += ptc_consent_match
     else:
         if len(db_ptc_consent_dict) == 0:
-            ptc_consent_match += "WARNING: Either no consent_group node found or no participants linked to consent_group node in this submission\n\n"
+            ptc_consent_match = "WARNING: Either no consent_group node found or no participants linked to consent_group node in this submission\n\n"
             summary_str += ptc_consent_match
         else:
             pass
