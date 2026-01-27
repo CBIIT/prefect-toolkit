@@ -55,6 +55,8 @@ def dbgap_validation_md(
 
 ## Validation Report
 
+---
+
 {validationstr}
 
 """
@@ -87,7 +89,7 @@ def find_ptc_not_in_dbGaP(db_ptc_list: list, dbgap_ptc_dict: dict) -> str:
 
     else:
         # participants in DB are all found in dbGaP
-        message = f"INFO: All participants in DB found in dbGaP"
+        message = f"INFO: All participants in DB found in dbGaP\n\n"
     return message
 
 
