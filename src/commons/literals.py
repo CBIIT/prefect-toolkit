@@ -65,6 +65,15 @@ class CommonsRepo:
             "master_zipball": "https://github.com/CBIIT/ccdi-dcc-model/archive/refs/heads/main.zip",
         }
     )
+    popsci: dict = field(
+        default_factory=lambda: {
+            "repo": "https://github.com/CBIIT/popsci-model",
+            "model_yaml": "model-desc/popsci-model.yml",
+            "props_yaml": "model-desc/popsci-model-props.yml",
+            "tags_api": "https://api.github.com/repos/CBIIT/popsci-model/tags",
+            "master_zipball": "https://github.com/CBIIT/popsci-model/archive/refs/heads/main.zip",
+        }
+    )
 
 @dataclass
 class CommonsFeat:
@@ -78,3 +87,4 @@ class CommonsFeat:
     c3dc: dict = field(default_factory=lambda: {"delimiter": ";"})
     ctdc: dict = field(default_factory=lambda: {"delimiter": "|"})
     ccdi_dcc: dict = field(default_factory=lambda: {"delimiter": ";"})
+    popsci: dict = field(default_factory=lambda: {"delimiter": "|"})
