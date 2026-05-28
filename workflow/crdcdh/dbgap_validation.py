@@ -369,17 +369,21 @@ def metadata_validation_str(
     p_in_db_consent_zero = find_db_ptc_consent_zero(db_ptc_list=db_participant_list, dbgap_ptc_dict=dbgap_participant_dict)
     summary_str += p_in_db_consent_zero
 
-    # samples in DB but not in dbGaP
-    s_not_in_dbgap = find_sample_not_in_dbgap(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict, dbgap_ptc_dict=dbgap_participant_dict)
-    summary_str += s_not_in_dbgap
+    # sample validation between DB and dbGaP, only perform if there are samples
+    if len(db_sample_dict.keys()) > 0:
+        # samples in DB but not in dbGaP
+        s_not_in_dbgap = find_sample_not_in_dbgap(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict, dbgap_ptc_dict=dbgap_participant_dict)
+        summary_str += s_not_in_dbgap
+    
+        # sample in dbGaP not in DB
+        s_not_in_db = find_sample_not_in_db(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
+        summary_str += s_not_in_db
 
-    # sample in dbGaP not in DB
-    s_not_in_db = find_sample_not_in_db(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
-    summary_str += s_not_in_db
-
-    # sample in both DB and dbGaP, but their parents/participant id don't match
-    s_ptc_match = sample_ptc_check(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
-    summary_str += s_ptc_match
+        # sample in both DB and dbGaP, but their parents/participant id don't match
+        s_ptc_match = sample_ptc_check(db_sample_dict=db_sample_dict, dbgap_sample_dict=dbgap_sample_dict)
+        summary_str += s_ptc_match
+    else:
+        summary_str += "WARNING: No sample found for this submission in DB, skipping sample validation against dbGaP\n\n"
 
     if db_ptc_consent_dict is None and db_ptc_consent_dict is None:
         # skip consent group check
