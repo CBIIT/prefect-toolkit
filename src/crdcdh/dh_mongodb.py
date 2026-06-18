@@ -300,6 +300,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             )
             # we assume this submission id is only associated with one study
             sample_dict = dict()
+            uncheckable_sample_list = []
             if (
                 record_collection.count_documents(
                     {"submissionID": submission_id, "nodeType": "sample"}
@@ -307,24 +308,38 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 > 0
             ):
                 for item in query_return_list:
+                    # item["parents"] is a list, we have situations when a sample is lack of linkage to a participant node, or a sample is linked to multiple types of nodes.
                     item_id = item["props"]["sample_id"]
-                    item_parent = item["parents"][0]["parentIDValue"]
-                    item_parent_query_response = record_collection.find(
-                        {
-                            "submissionID": submission_id,
-                            "nodeType": "participant",
-                            "nodeID": item_parent,
-                        }
-                    )
-                    # we only expect one participant return in this case because one sample is most likely
-                    # pointing to one participant instead of multiple
-                    item_parent_id = item_parent_query_response[0]["props"][
-                        "participant_id"
-                    ]
-                    sample_dict[item_id] = item_parent_id
+                    item_parent_list = item["parents"]
+                    item_has_participant_parent = False
+                    for parent in item_parent_list:
+                        if parent["parentType"] == "participant":
+                            item_has_participant_parent = True
+                            item_parent_query_response = record_collection.find(
+                                {
+                                    "submissionID": submission_id,
+                                    "nodeType": "participant",
+                                    "nodeID": parent["parentIDValue"], # in GC, this is the value of study_participant_id property. In CCDI-DCC, this matches to participant_id property
+                                }
+                            )
+
+                            # now query for "participant_id" value for the participant matched
+                            # this is because in GC, parentID value return the value of study_participant_id prop. Participant node also has a participant_id prop, which is the value submitted to dbGaP
+                            # However in CCDI-DCC, parentIDValue should match participant_id prop under participant node
+                            item_parent_id = item_parent_query_response[0]["props"][
+                                "participant_id"
+                            ]
+                            sample_dict[item_id] = item_parent_id
+                            break
+                        else:
+                            pass
+                    if not item_has_participant_parent:
+                        uncheckable_sample_list.append(item_id)
+                    else:
+                        pass
             else:
                 pass
-            return sample_dict
+            return uncheckable_sample_list, sample_dict
         except errors.PyMongoError as pe:
             print(
                 f"Failed to query sample_id in dataRecords collection with submissionID: {submission_id}\nPyMongoError: {repr(pe)}"
