@@ -42,6 +42,7 @@ def dbgap_validation_md(
     else:
         uncheckable_sample_count = 0
         uncheckable_sample_df_str = ""
+    sample_count_linked_to_participant = sample_count - uncheckable_sample_count
     markdown_report = f"""# CRDCDH Metadata Validation Report - {get_time()}
 ## Submission Information
 
@@ -58,7 +59,7 @@ def dbgap_validation_md(
     - {participant_count}
 
 - **Sample count in DB that are linked to participants**
-    - {sample_count}
+    - {sample_count_linked_to_participant}
 
 - **Sample in DB that don't have a direct linkage to a participant node**
     - {uncheckable_sample_count}
