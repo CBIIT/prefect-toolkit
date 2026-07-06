@@ -20,7 +20,7 @@ def dbgap_validation_md(
     study_version: str,
     participant_count: int,
     sample_count: int,
-    uncheckable_sample_list: list[str],
+    sample_wo_participant_parent_list: list[str],
     validationstr: str,
 ) -> None:
     """Creates an artifact of metadata validation flow
@@ -36,9 +36,9 @@ def dbgap_validation_md(
         study_version = "Not Found [WARNING: Validation was performed using LATEST version found through dbGaP API]"
     else:
         pass
-    if len(uncheckable_sample_list) > 0:
-        uncheckable_sample_count = len(uncheckable_sample_list)
-        uncheckable_sample_df_str = pd.DataFrame(uncheckable_sample_list, columns=["Sample ID"]).to_markdown(tablefmt="pipe", index=False)
+    if len(sample_wo_participant_parent_list) > 0:
+        uncheckable_sample_count = len(sample_wo_participant_parent_list)
+        uncheckable_sample_df_str = pd.DataFrame(sample_wo_participant_parent_list, columns=["Sample ID"]).to_markdown(tablefmt="pipe", index=False)
     else:
         uncheckable_sample_count = 0
         uncheckable_sample_df_str = ""
@@ -60,7 +60,7 @@ def dbgap_validation_md(
 - **Sample count in DB that are linked to participants**
     - {sample_count}
 
-- **Sample in DB CANNOT be checked for dbGaP validation**
+- **Sample in DB that don't have a direct linkage to a participant node**
     - {uncheckable_sample_count}
 {uncheckable_sample_df_str}
 
@@ -431,17 +431,17 @@ def validation_against_dbgap(submission_id: str, tier: TierDropDownChoices, chec
     submission_participants = db_object.get_study_participants(
         submission_id=submission_id
     )
-    uncheckable_samples, submission_samples = db_object.get_study_samples(submission_id=submission_id)
-    total_samples = len(uncheckable_samples) + len(submission_samples.keys())
+    samples_without_direct_participant_parent, submission_samples = db_object.get_study_samples(submission_id=submission_id)
+    total_samples = len(submission_samples.keys())
     logger.info(
         f"Participants found in submission {submission_id}: {len(submission_participants)}"
     )
     logger.info(
         f"Samples found in submission {submission_id}: {total_samples}"
     )
-    if len(uncheckable_samples) > 0:
+    if len(samples_without_direct_participant_parent) > 0:
         logger.warning(
-            f"Found {len(uncheckable_samples)} out of {total_samples} sample(s) in submission {submission_id} that cannot be checked for dbGaP validation because they are either not linked to any participant. These samples will be skipped for dbGaP validation."
+            f"Found {len(samples_without_direct_participant_parent)} out of {total_samples} sample(s) in submission {submission_id} that don't have a direct linkage to a participant node. These samples are likely derived from PDX, which was derived from a sample that is linked to a participant."
         )
     else:
         logger.info("All samples in this submission can be checked for dbGaP validation because we found every sample linked to a participant node.")
@@ -502,7 +502,7 @@ def validation_against_dbgap(submission_id: str, tier: TierDropDownChoices, chec
         study_version=study_version,
         participant_count=len(submission_participants),
         sample_count=len(submission_samples.keys()),
-        uncheckable_sample_list=uncheckable_samples,
+        sample_wo_participant_parent_list=samples_without_direct_participant_parent,
         validationstr=validation_str,
     )
     return None
