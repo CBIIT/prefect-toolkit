@@ -453,7 +453,16 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                                 if not has_participant_parent:
                                     raise ValueError(f"Sample {sample_parent_id} in submission {submission_id} DOES NOT have a participant parent. This sample is the parent of PDX {pdx_parent_id}, which is the parent of sample {sample_id}. We expect this sample to have a participant parent")
                                 else:
-                                    return participant_parent_id
+                                    # query participant node using that parentIDValue
+                                    participant_query_return_list = record_collection.find(
+                                        {
+                                            "submissionID": submission_id,
+                                            "nodeType": "participant",
+                                            "nodeID": participant_parent_id, # in GC, this is the value of study_participant_id property. In CCDI-DCC, this matches to participant_id property
+                                        }
+                                    )
+                                    item_participant_id= participant_query_return_list[0]["props"]["participant_id"]
+                                    return item_participant_id
             else:
                 raise ValueError(f"Sample {sample_id} CAN NOT BE FOUND in submission {submission_id}")
         except errors.PyMongoError as pe:
