@@ -203,7 +203,7 @@ def find_sample_not_in_dbgap(db_sample_dict: dict, dbgap_sample_dict: dict, dbga
             s_parent_in_dbgap_df_str = pd.DataFrame.from_records(
                 s_parent_in_dbgap
             ).to_markdown(tablefmt="pipe", index=False)
-            message += f"\t- WARNING: {len(s_parent_in_dbgap)} Sample(s) found in DB but not in dbGaP. However, they belong to participants registered in dbGaP.\n{s_parent_in_dbgap_df_str}\n\n"
+            message += f"\t- ERROR: {len(s_parent_in_dbgap)} Sample(s) found in DB but not in dbGaP. However, they belong to participants registered in dbGaP.\n{s_parent_in_dbgap_df_str}\n\n"
         else:
             pass
 
@@ -335,7 +335,7 @@ def participant_consent_check(db_ptc_consent_dict: dict, dbgap_ptc_consent_dict:
     if db_ptc_found_in_dbgap == 0:
         message += "ERROR: No participants in DB found in dbGaP for consent group check\n\n"
     elif db_ptc_found_in_dbgap < len(db_ptc_consent_dict):
-        message += f"WARNING: Only {db_ptc_found_in_dbgap}/{len(db_ptc_consent_dict)} participants in DB found in dbGaP for consent group check\n\n"
+        message += f"ERROR: Only {db_ptc_found_in_dbgap}/{len(db_ptc_consent_dict)} participants in DB found in dbGaP for consent group check\n\n"
         if report_df.shape[0] > 0:
             report_df_str = report_df.to_markdown(tablefmt="pipe", index=False)
             message += f"ERROR: Found {report_df.shape[0]} participant(s) with mismatched consent group between DB and dbGaP\n{report_df_str}\n\n"
