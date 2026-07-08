@@ -281,10 +281,10 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
     def get_study_samples(self, submission_id: str) -> Union[dict, None]:
         """Returns a list of sample ids of a submission
         This functions will first query for all the samples in the submission, and find all the samples that have a direct linkage to a participant.
-        For any samples that don't have a direct linkage to a participant, we are limit the case to pdx samples. A path from a pdx sample to participant can be
+        For any samples that don't have a direct linkage to a participant, we are limiting the case to pdx samples. A path from a pdx sample to participant can be
         participant <- sample <- pdx <- sample (pdx sample)
 
-        This function will find follow this path to find all the pdx sample and participant pairs
+        This function will follow this path to find all the pdx sample and participant pairs
 
         Args:
             submission_id (str): submissionID in "dataRecords" Collection or
