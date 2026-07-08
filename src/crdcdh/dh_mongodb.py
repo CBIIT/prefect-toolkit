@@ -280,6 +280,11 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
 
     def get_study_samples(self, submission_id: str) -> Union[dict, None]:
         """Returns a list of sample ids of a submission
+        This functions will first query for all the samples in the submission, and find all the samples that have a direct linkage to a participant.
+        For any samples that don't have a direct linkage to a participant, we are limiting the case to pdx samples. A path from a pdx sample to participant can be
+        participant <- sample <- pdx <- sample (pdx sample)
+
+        This function will follow this path to find all the pdx sample and participant pairs
 
         Args:
             submission_id (str): submissionID in "dataRecords" Collection or
@@ -300,6 +305,7 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
             )
             # we assume this submission id is only associated with one study
             sample_dict = dict()
+            sample_wo_participant_parent_list = []
             if (
                 record_collection.count_documents(
                     {"submissionID": submission_id, "nodeType": "sample"}
@@ -307,24 +313,42 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 > 0
             ):
                 for item in query_return_list:
+                    # item["parents"] is a list, we have situations when a sample is lack of linkage to a participant node, or a sample is linked to multiple types of nodes.
                     item_id = item["props"]["sample_id"]
-                    item_parent = item["parents"][0]["parentIDValue"]
-                    item_parent_query_response = record_collection.find(
-                        {
-                            "submissionID": submission_id,
-                            "nodeType": "participant",
-                            "nodeID": item_parent,
-                        }
-                    )
-                    # we only expect one participant return in this case because one sample is most likely
-                    # pointing to one participant instead of multiple
-                    item_parent_id = item_parent_query_response[0]["props"][
-                        "participant_id"
-                    ]
-                    sample_dict[item_id] = item_parent_id
+                    item_parent_list = item["parents"]
+                    item_has_participant_parent = False
+                    for parent in item_parent_list:
+                        if parent["parentType"] == "participant":
+                            item_has_participant_parent = True
+                            item_parent_query_response = record_collection.find(
+                                {
+                                    "submissionID": submission_id,
+                                    "nodeType": "participant",
+                                    "nodeID": parent["parentIDValue"], # in GC, this is the value of study_participant_id property. In CCDI-DCC, this matches to participant_id property
+                                }
+                            )
+
+                            # now query for "participant_id" value for the participant matched
+                            # this is because in GC, parentID value return the value of study_participant_id prop. Participant node also has a participant_id prop, which is the value submitted to dbGaP
+                            # However in CCDI-DCC, parentIDValue should match participant_id prop under participant node
+                            item_parent_id = item_parent_query_response[0]["props"][
+                                "participant_id"
+                            ]
+                            sample_dict[item_id] = item_parent_id
+                            break
+                        else:
+                            pass
+                    if not item_has_participant_parent:
+                        sample_wo_participant_parent_list.append(item_id)
+                        # try to find the participant in upper level, i.e. sample -> pdx -> sample -> participant
+                        sample_wo_participant_upper_participant = self._get_non_participant_sample_origin(submission_id=submission_id, sample_id = item_id)
+                        sample_dict[item_id] = sample_wo_participant_upper_participant
+                    else:
+                        pass
             else:
                 pass
-            return sample_dict
+            # sample_wo_participant_parent_list is a list of sample ids that don't have a direct linkage to a participant node. These samples are expected to have an participant in upper level, i.e. sample -> pdx -> sample -> participant. 
+            return sample_wo_participant_parent_list, sample_dict
         except errors.PyMongoError as pe:
             print(
                 f"Failed to query sample_id in dataRecords collection with submissionID: {submission_id}\nPyMongoError: {repr(pe)}"
@@ -335,6 +359,118 @@ class DataHubMongoDB(CrdcDHMongoSecrets):
                 f"Failed to query sample_id in dataRecords collection with submissionID: {submission_id}\n{repr(e)}"
             )
             return None
+
+    def _get_non_participant_sample_origin(self, submission_id: str, sample_id: str) -> str:
+        """Returns the original participant of a sample that is NOT directly linked to a participant
+        path: participant <- sample <- pdx <- sample (pdx sample)
+        # Only use this function when a sample is found not having a direct participant parent. 
+        # This function will raise error if the sample is not linked to a pdx parent, or the pdx parent is not linked to a sample parent, or the sample parent is not linked to a participant parent
+
+        Args:
+            submission_id (str): submissionID in "dataRecords" Collection or
+            _id in "submissions" Collection. We assume only one study is associated with
+            this submissionID
+            sample_id (str): sample_id of a sample
+
+        Returns:
+            str: the participant_id of the original participant which 
+        """
+        client = self._mongodb_client()
+        db_name = self._mongo_db_name()
+        db = client[db_name]
+        record_collection = db[self.datarecord_collection]
+        try:
+            query_return_list = record_collection.find(
+                {"submissionID": submission_id, "nodeType": "sample", "props.sample_id": sample_id},
+                {"nodeID": 1, "props.sample_id": 1, "parents": 1},
+            )
+            if (
+                record_collection.count_documents(
+                    {"submissionID": submission_id, "nodeType": "sample", "props.sample_id": sample_id}
+                )
+                > 0
+            ):
+                # there should be only one item returned, since sample_id should be unique for a given submission_id
+                return_item = query_return_list[0]
+                parents_list = return_item["parents"]
+                # find the pdx parent or cell_line parent
+                has_pdx_parent = False
+                for parent in parents_list:
+                    if parent["parentType"] == "pdx":
+                        pdx_parent_id = parent["parentIDValue"]
+                        has_pdx_parent = True
+                        break
+                    else:
+                        pass
+                if not has_pdx_parent:
+                    raise ValueError(f"Sample {sample_id} in submission {submission_id} DOES NOT have a pdx parent or a participant parent")
+                else:
+                    # now query for the pdx sample, and this pdx record should be either pointing to a sample or a study record
+                    pdx_query_return_list = record_collection.find(
+                        {"submissionID": submission_id, "nodeType": "pdx", "props.pdx_id": pdx_parent_id},
+                        {"nodeID": 1, "props.pdx_id": 1, "parents": 1},
+                    )
+                    if (
+                        record_collection.count_documents(
+                            {"submissionID": submission_id, "nodeType": "pdx", "props.pdx_id": pdx_parent_id}
+                        )
+                        > 0
+                    ):
+                        pdx_return_item = pdx_query_return_list[0] # there should be only one pdx_id match within a given submission
+                        pdx_parents_list = pdx_return_item["parents"]
+                        has_sample_parent = False
+                        for parent in pdx_parents_list:
+                            if parent["parentType"] == "sample":
+                                sample_parent_id = parent["parentIDValue"]
+                                has_sample_parent = True
+                                break
+                            else:
+                                pass
+                        if not has_sample_parent:
+                            raise ValueError(f"PDX {pdx_parent_id} in submission {submission_id} DOES NOT have a sample parent. This PDX is the parent of sample {sample_id}, so we expect this PDX to have a sample parent which is linked to a participant")
+                        else:
+                            # now query for the sample parent, and this sample should have a participant parent
+                            sample_query_return_list = record_collection.find(
+                                {"submissionID": submission_id, "nodeType": "sample", "props.sample_id": sample_parent_id},
+                                {"nodeID": 1, "props.sample_id": 1, "parents": 1},
+                            )
+                            if (
+                                record_collection.count_documents(
+                                    {"submissionID": submission_id, "nodeType": "sample", "props.sample_id": sample_parent_id}
+                                )
+                                > 0
+                            ):
+                                sample_return_item = sample_query_return_list[0] # there should be only one sample_id match within a given submission
+                                sample_parents_list = sample_return_item["parents"]
+                                has_participant_parent = False
+                                for parent in sample_parents_list:
+                                    if parent["parentType"] == "participant":
+                                        participant_parent_id = parent["parentIDValue"]
+                                        has_participant_parent = True
+                                        break
+                                    else:
+                                        pass
+                                if not has_participant_parent:
+                                    raise ValueError(f"Sample {sample_parent_id} in submission {submission_id} DOES NOT have a participant parent. This sample is the parent of PDX {pdx_parent_id}, which is the parent of sample {sample_id}. We expect this sample to have a participant parent")
+                                else:
+                                    # query participant node using that parentIDValue
+                                    participant_query_return_list = record_collection.find(
+                                        {
+                                            "submissionID": submission_id,
+                                            "nodeType": "participant",
+                                            "nodeID": participant_parent_id, # in GC, this is the value of study_participant_id property. In CCDI-DCC, this matches to participant_id property
+                                        }
+                                    )
+                                    item_participant_id= participant_query_return_list[0]["props"]["participant_id"]
+                                    return item_participant_id
+            else:
+                raise ValueError(f"Sample {sample_id} CAN NOT BE FOUND in submission {submission_id}")
+        except errors.PyMongoError as pe:
+            pe.args = (f"custom message: Failed to query sample in dataRecords collection with submissionID: {submission_id} and sample_id: {sample_id}\n{repr(pe)}",)
+            raise
+        except Exception as e:
+            e.args = (f"custom message: Failed to query sample in dataRecords collection with submissionID: {submission_id} and sample_id: {sample_id}\n{repr(e)}")
+            raise
 
     def get_study_participants_consent(self, submission_id: str) -> Union[dict, None]:
         """Returns a dict of participant ids and their consent code of a submission
