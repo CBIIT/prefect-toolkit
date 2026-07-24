@@ -104,12 +104,12 @@ class SstrHaul:
         request_response = self._get_response(request_url=study_request_url)
 
         pagination = request_response.get("pagination")
-            if pagination is not None:
-                subject_cnt = pagination["total"]
-            else:
-                # No pagination key means the result fit on a single page;
-                # count the returned subjects directly.
-                subject_cnt = len(request_response.get("subjects", []))
+        if pagination is not None:
+            subject_cnt = pagination["total"]
+        else:
+            # No pagination key means the result fit on a single page;
+            # count the returned subjects directly.
+            subject_cnt = len(request_response.get("subjects", []))
         del request_response
         return subject_cnt
 
